@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toastmasters Council Voting</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Toastmasters Council Voting</h1>
+            <p class="subtitle">Vote assignment based on Council Member and Registration lists</p>
+        </header>
+
+        <main>
+            <!-- Input Section -->
+            <section class="input-section">
+                <h2>Step 1: Upload Files</h2>
+                <div class="upload-grid">
+                    <div class="upload-card">
+                        <label for="council-file" class="file-label">
+                            <span class="label-text">Council Member List (CSV)</span>
+                            <input type="file" id="council-file" accept=".csv" />
+                            <span class="file-name" id="council-file-name">No file selected</span>
+                        </label>
+                    </div>
+                    <div class="upload-card">
+                        <label for="registration-file" class="file-label">
+                            <span class="label-text">Registration List (CSV)</span>
+                            <input type="file" id="registration-file" accept=".csv" />
+                            <span class="file-name" id="registration-file-name">No file selected</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button id="process-btn" class="btn btn-primary">Process Votes</button>
+            </section>
+
+            <!-- Validation & Error Section -->
+            <section id="validation-section" class="validation-section hidden">
+                <h2>Validation Summary</h2>
+                <div id="validation-messages" class="validation-messages"></div>
+            </section>
+
+            <!-- Results Section -->
+            <section id="results-section" class="results-section hidden">
+                <h2>Voting Results</h2>
+                
+                <div class="results-toolbar">
+                    <button id="download-csv-btn" class="btn btn-secondary">⬇ Download as CSV</button>
+                </div>
+
+                <div class="table-container">
+                    <table id="results-table" class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Member Name</th>
+                                <th>Member Number</th>
+                                <th>Email</th>
+                                <th>Votes Available</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-body">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="stats-summary">
+                    <p><strong>Total Members:</strong> <span id="total-members">0</span></p>
+                    <p><strong>Total Votes Distributed:</strong> <span id="total-votes">0</span></p>
+                </div>
+            </section>
+
+            <!-- Voting Rules Link -->
+            <section class="rules-section">
+                <h3>Voting Rules & Documentation</h3>
+                <p>
+                    View the complete <a href="docs/voting-rules.md" target="_blank">Voting Rules</a> 
+                    for details on vote assignment logic, redistribution, and eligibility criteria.
+                </p>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 Toastmasters Council Voting System | Static Site Powered by GitHub Pages</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

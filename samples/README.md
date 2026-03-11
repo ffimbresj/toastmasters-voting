@@ -7,12 +7,12 @@ This directory contains sample input and expected output files for testing and v
 ### sample-council.csv
 A sample Council Member List containing:
 - **10 clubs** with both President and VP Education positions registered
-- **2 incomplete clubs** with leadership roles (Area Director, Division Director) 
-- **22 council members** in total
+- **5 district leadership roles** (Area Director, Division Director, and the 3 Manager roles)
+- **25 council members** in total
 
 ### sample-registration.csv
 A sample Registration List with:
-- **20 registered members** (Will you be attending? = Yes)
+- **23 registered members** (Will you be attending? = Yes)
 - **2 unregistered members** (Diana White, Fiona Miller) to test incomplete club representation
 - Test case: Charlie Club's VPE (Diana) is not registered, so President (Charlie) gets all 2 votes
 
@@ -21,16 +21,19 @@ Expected voting results after applying rules:
 - Each complete club with both officers registered: President gets 1, VPE gets 1 (e.g., Alice Smith & Bob Johnson from Alpha Club)
 - Each complete club with only President registered: President gets 2 (e.g., Charlie Brown from Bravo Club)
 - Each complete club with only VPE registered: VPE gets 2
-- Leadership roles (Area Director, Division Director): +1 independent vote if registered
-- Victor King: Area Director with 1 independent vote
-- Walter Prince: Division Director with 1 independent vote
+- Leadership roles (Area Director, Division Director, Administration Manager, Finance Manager, Public Relations Manager): +1 leadership vote if registered
+- Victor King: Area Director with 1 leadership vote
+- Walter Prince: Division Director with 1 leadership vote
+- Yara Stone: Administration Manager with 1 leadership vote
+- Zane Moore: Finance Manager with 1 leadership vote
+- Ana Rivera: Public Relations Manager with 1 leadership vote
 
 ## Test Scenarios Covered
 
 1. **Both officers registered** (Alpha Club): President gets 1, VPE gets 1
 2. **Only President registered** (Bravo Club): President gets 2
 3. **Only VPE registered** (Charlie Club after Diana doesn't attend): President gets 2
-4. **Leadership roles** (Victor, Walter): +1 independent vote
+4. **Leadership roles** (Victor, Walter, Yara, Zane, Ana): +1 leadership vote
 5. **Incomplete clubs** (District Leadership): Members without Complete status
 
 ## How to Use

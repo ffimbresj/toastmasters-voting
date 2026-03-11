@@ -89,6 +89,13 @@ If hosting on GitHub Pages:
 - `Email` - Contact email
 - `Will you be attending?` - Attendance flag ("Yes", "No", etc.)
 
+**Also supported (Spanish Google Form format):**
+- `Número de socio`
+- `Nombre(s)`
+- `Apellidos`
+- `Proporciona correctamente tu correo electrónico`
+- `¿Asistirás a la reunión?` (for example: `Sí, asistiré en persona`, `Sí, asistiré de manera remota`, `No asistiré`)
+
 **Notes**:
 - Members are considered registered if present in this list **and** `Will you be attending? = Yes` (case-insensitive)
 - Duplicate entries for same Member Number are deduplicated (last occurrence retained)

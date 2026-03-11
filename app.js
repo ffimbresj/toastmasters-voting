@@ -194,17 +194,31 @@ function normalizeRegistrationData(csvText) {
         columnMap[col.toLowerCase().trim()] = idx;
     });
 
+    const firstDefined = (...keys) => {
+        for (const key of keys) {
+            if (columnMap[key] !== undefined) return columnMap[key];
+        }
+        return undefined;
+    };
+
+    const normalizeText = (value) =>
+        (value || '')
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim();
+
     // Map expected columns
     const cols = {
-        memberId: columnMap['member number'],
-        name: columnMap['name'],
-        lastName: columnMap['last name'],
-        email: columnMap['email'],
-        attending: columnMap['will you be attending?']
+        memberId: firstDefined('member number', 'numero de socio', 'número de socio'),
+        name: firstDefined('name', 'nombre(s)', 'nombres'),
+        lastName: firstDefined('last name', 'apellidos'),
+        email: firstDefined('email', 'proporciona correctamente tu correo electronico', 'proporciona correctamente tu correo electrónico'),
+        attending: firstDefined('will you be attending?', '¿asistiras a la reunion?', '¿asistirás a la reunión?', 'asistiras a la reunion?', 'asistirás a la reunión?')
     };
 
     if (cols.memberId === undefined) {
-        throw new Error('Missing required column: Member Number');
+        throw new Error('Missing required column: Member Number / Numero de socio');
     }
 
     const memberMap = new Map();
@@ -224,8 +238,8 @@ function normalizeRegistrationData(csvText) {
         }
         seenAny.add(memberId);
 
-        const attendingVal = (row[cols.attending] || '').toLowerCase().trim();
-        const isAttending = ['yes', 'y', 'true', 'attending'].includes(attendingVal);
+        const attendingVal = normalizeText(row[cols.attending] || '');
+        const isAttending = attendingVal.startsWith('si') || ['yes', 'y', 'true', 'attending'].includes(attendingVal);
 
         if (isAttending) {
             // Overwrite — last occurrence retained

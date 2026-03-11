@@ -40,7 +40,9 @@ A member is considered "registered" if they appear in the Registration List with
 Registered paid members holding one of the following positions receive an additional **leadership vote**:
 - `Area Director`
 - `Division Director`
-- `District Manager`
+- `Administration Manager`
+- `Finance Manager`
+- `Public Relations Manager`
 - `Club Growth Director`
 - `Program Quality Director`
 - `District Director`
@@ -143,7 +145,7 @@ The application **must** report the following validation issues (non-blocking; d
 4. **CSV parsing**: Support quoted fields; handle embedded commas and newlines within quoted strings.
 5. **Council CSV preface**: Skip non-data lines (e.g., "Date Generated: ...") before the header row.
 6. **Determinism**: Always sort output by Member ID (ascending) for consistent reproducibility.
-7. **Leadership roles**: The list in Rule 2.1 uses the exact `Position Description` values from the Council CSV. Emeritus variants are **not** eligible for leadership votes.
+7. **Leadership roles**: The list in Rule 2.1 uses the exact `Position Description` values from the Council CSV.
 
 ---
 

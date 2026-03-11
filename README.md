@@ -91,7 +91,7 @@ If hosting on GitHub Pages:
 
 **Notes**:
 - Members are considered registered if present in this list **and** `Will you be attending? = Yes` (case-insensitive)
-- Duplicate entries for same Member Number are deduplicated (first occurrence retained)
+- Duplicate entries for same Member Number are deduplicated (last occurrence retained)
 
 ## Voting Rules Summary
 
@@ -105,11 +105,11 @@ See [docs/voting-rules.md](docs/voting-rules.md) for complete rules. Quick overv
 - **If neither registered**: Club is unrepresented (warning)
 
 ### Leadership Votes
-- Members in specific leadership roles get **+1 independent vote** if registered:
-  - Area Director, Division Director, District Manager
+- Members in specific leadership roles get **+1 leadership vote** if registered:
+   - Area Director, Division Director
+   - Administration Manager, Finance Manager, Public Relations Manager
   - Club Growth Director, Program Quality Director
   - District Director, Immediate Past District Director
-  - And related "Emeritus" variants
 
 ### Vote Cap
 - **Maximum 3 votes per member** (club votes + leadership votes)
@@ -175,7 +175,7 @@ No build process, no dependencies, no npm install required.
 
 To modify voting rules:
 1. Edit `docs/voting-rules.md` (documentation)
-2. Update `INDEPENDENT_VOTE_ROLES` array in `app.js` (code)
+2. Update `LEADERSHIP_VOTE_ROLES` array in `app.js` (code)
 3. Adjust vote calculation logic in `computeVotes()` function
 4. Update `redistributeOverflow()` for redistribution tie-breakers
 

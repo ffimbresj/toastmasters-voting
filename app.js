@@ -7,7 +7,9 @@
 const LEADERSHIP_VOTE_ROLES = [
     'Area Director',
     'Division Director',
-    'District Manager',
+    'Administration Manager',
+    'Finance Manager',
+    'Public Relations Manager',
     'Club Growth Director',
     'Program Quality Director',
     'District Director',

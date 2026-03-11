@@ -3,17 +3,14 @@
 // Core: CSV parsing, vote engine, display, export
 // ============================================================================
 
-// Configuration - Election leadership roles eligible for independent vote
-const INDEPENDENT_VOTE_ROLES = [
+// Configuration - Leadership roles eligible for the leadership vote
+const LEADERSHIP_VOTE_ROLES = [
     'Area Director',
-    'Area Director Emeritus',
     'Division Director',
-    'Division Director Emeritus',
     'District Manager',
     'Club Growth Director',
     'Program Quality Director',
     'District Director',
-    'District Director Emeritus',
     'Immediate Past District Director'
 ];
 
@@ -140,7 +137,8 @@ function normalizeCouncilData(csvText) {
         clubId: columnMap['club id'],
         clubName: columnMap['club name'],
         clubStatus: columnMap['club status'],
-        positionDescription: columnMap['position description']
+        positionDescription: columnMap['position description'],
+        isPaid: columnMap['is paid']
     };
 
     if (cols.memberId === undefined || cols.positionDescription === undefined) {
@@ -166,7 +164,8 @@ function normalizeCouncilData(csvText) {
             clubId: row[cols.clubId],
             clubName: row[cols.clubName],
             clubStatus: row[cols.clubStatus],
-            positionDescription: row[cols.positionDescription]
+            positionDescription: row[cols.positionDescription],
+            isPaid: row[cols.isPaid]
         });
 
         if (member) {
@@ -206,8 +205,9 @@ function normalizeRegistrationData(csvText) {
         throw new Error('Missing required column: Member Number');
     }
 
-    const members = [];
-    const seen = new Set();
+    const memberMap = new Map();
+    const seenAny = new Set();
+    const duplicateIds = [];
 
     for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
@@ -216,27 +216,30 @@ function normalizeRegistrationData(csvText) {
         const memberId = (row[cols.memberId] || '').trim();
         if (!memberId) continue;
 
-        // Deduplication: skip if already seen
-        if (seen.has(memberId)) {
-            console.warn(`Duplicate registration for member ${memberId}; skipping.`);
-            continue;
+        // Track duplicates; last occurrence wins
+        if (seenAny.has(memberId)) {
+            duplicateIds.push(memberId);
         }
-        seen.add(memberId);
+        seenAny.add(memberId);
 
         const attendingVal = (row[cols.attending] || '').toLowerCase().trim();
         const isAttending = ['yes', 'y', 'true', 'attending'].includes(attendingVal);
 
         if (isAttending) {
-            members.push({
-                memberId: memberId,
+            // Overwrite — last occurrence retained
+            memberMap.set(memberId, {
+                memberId,
                 name: row[cols.name] || '',
                 lastName: row[cols.lastName] || '',
                 email: row[cols.email] || ''
             });
+        } else {
+            // Last entry says "not attending" — remove from eligible list
+            memberMap.delete(memberId);
         }
     }
 
-    return members;
+    return { members: Array.from(memberMap.values()), duplicates: duplicateIds };
 }
 
 /**
@@ -251,7 +254,8 @@ function normalizeMemberRecord(raw) {
         clubId: (raw.clubId || '').trim(),
         clubName: (raw.clubName || '').trim(),
         clubStatus: (raw.clubStatus || '').trim(),
-        positionDescription: (raw.positionDescription || '').trim()
+        positionDescription: (raw.positionDescription || '').trim(),
+        isPaid: (raw.isPaid || '').trim()
     };
 }
 
@@ -260,40 +264,42 @@ function normalizeMemberRecord(raw) {
 // ============================================================================
 
 /**
- * Compute votes for all registered members based on council data and rules
+ * Compute votes for all registered paid members based on council data and rules
  */
 function computeVotes(councilMembers, registeredMembers) {
     const validationIssues = [];
 
-    // Index registered members by ID
-    const registered = new Set(registeredMembers.map(m => m.memberId));
-
-    // Index council members by ID for quick lookup
+    // Index ALL council members by ID (for name/info lookup and role detection)
     const councilById = {};
     councilMembers.forEach(m => {
-        if (!councilById[m.memberId]) {
-            councilById[m.memberId] = [];
-        }
+        if (!councilById[m.memberId]) councilById[m.memberId] = [];
         councilById[m.memberId].push(m);
     });
 
-    // Step 1: Identify eligible clubs and their officers
-    const clubs = {}; // clubId -> { clubName, status, president: [], vpe: [] }
+    // Only paid council members are eligible to vote
+    const paidCouncilMembers = councilMembers.filter(
+        m => m.isPaid.toLowerCase() === 'paid member'
+    );
+    const paidMemberIds = new Set(paidCouncilMembers.map(m => m.memberId));
 
-    councilMembers.forEach(member => {
+    // Build registered+paid set (registered AND confirmed paid in council)
+    const registered = new Set(
+        registeredMembers.map(m => m.memberId).filter(id => paidMemberIds.has(id))
+    );
+
+    // Step 1: Identify eligible clubs and officers (paid council members, Complete clubs only)
+    const clubs = {}; // clubId -> { clubName, president: [], vpe: [] }
+
+    paidCouncilMembers.forEach(member => {
         if (member.clubStatus !== 'Complete') return;
 
         if (!clubs[member.clubId]) {
             clubs[member.clubId] = {
                 clubName: member.clubName,
-                status: member.clubStatus,
                 president: [],
-                vpe: [],
-                allOfficers: []
+                vpe: []
             };
         }
-
-        clubs[member.clubId].allOfficers.push(member);
 
         if (member.positionDescription === 'Club President') {
             clubs[member.clubId].president.push(member);
@@ -303,7 +309,7 @@ function computeVotes(councilMembers, registeredMembers) {
     });
 
     // Step 2: Assign initial club votes
-    const memberVotes = {}; // memberId -> { clubVotes: [], independentVotes: 0, totalVotes: 0 }
+    let memberVotes = {}; // memberId -> { clubVotes: [], leadershipVotes: 0, totalVotes: 0 }
 
     Object.entries(clubs).forEach(([clubId, club]) => {
         const presReg = club.president.filter(m => registered.has(m.memberId));
@@ -312,66 +318,67 @@ function computeVotes(councilMembers, registeredMembers) {
         if (presReg.length === 0 && vpeReg.length === 0) {
             validationIssues.push({
                 type: 'unrepresentedClub',
-                message: `Club unrepresented: ${club.clubName} (${clubId}) has no registered President or VP Education`
+                message: `Club unrepresented: ${club.clubName} (${clubId}) has no registered paid President or VP Education`
             });
             return;
         }
 
         if (presReg.length > 0 && vpeReg.length > 0) {
-            // Both registered: split votes 1-1
+            // Both registered: split 1 vote each
             presReg.forEach(m => {
-                if (!memberVotes[m.memberId]) memberVotes[m.memberId] = { clubVotes: [], independentVotes: 0 };
+                if (!memberVotes[m.memberId]) memberVotes[m.memberId] = { clubVotes: [], leadershipVotes: 0 };
                 memberVotes[m.memberId].clubVotes.push({ clubId, votes: 1 });
             });
             vpeReg.forEach(m => {
-                if (!memberVotes[m.memberId]) memberVotes[m.memberId] = { clubVotes: [], independentVotes: 0 };
+                if (!memberVotes[m.memberId]) memberVotes[m.memberId] = { clubVotes: [], leadershipVotes: 0 };
                 memberVotes[m.memberId].clubVotes.push({ clubId, votes: 1 });
             });
         } else if (presReg.length > 0) {
-            // Only president: gets 2 votes
+            // Only president registered: gets both votes
             presReg.forEach(m => {
-                if (!memberVotes[m.memberId]) memberVotes[m.memberId] = { clubVotes: [], independentVotes: 0 };
+                if (!memberVotes[m.memberId]) memberVotes[m.memberId] = { clubVotes: [], leadershipVotes: 0 };
                 memberVotes[m.memberId].clubVotes.push({ clubId, votes: 2 });
             });
-        } else if (vpeReg.length > 0) {
-            // Only VPE: gets 2 votes
+        } else {
+            // Only VPE registered: gets both votes
             vpeReg.forEach(m => {
-                if (!memberVotes[m.memberId]) memberVotes[m.memberId] = { clubVotes: [], independentVotes: 0 };
+                if (!memberVotes[m.memberId]) memberVotes[m.memberId] = { clubVotes: [], leadershipVotes: 0 };
                 memberVotes[m.memberId].clubVotes.push({ clubId, votes: 2 });
             });
         }
     });
 
-    // Step 3: Assign independent leadership votes
-    councilMembers.forEach(member => {
+    // Step 3: Assign leadership vote (+1, regardless of whether member is also a club officer)
+    paidCouncilMembers.forEach(member => {
         if (!registered.has(member.memberId)) return;
 
-        if (INDEPENDENT_VOTE_ROLES.some(role => member.positionDescription.includes(role))) {
+        if (LEADERSHIP_VOTE_ROLES.some(role => member.positionDescription.includes(role))) {
             if (!memberVotes[member.memberId]) {
-                memberVotes[member.memberId] = { clubVotes: [], independentVotes: 0 };
+                memberVotes[member.memberId] = { clubVotes: [], leadershipVotes: 0 };
             }
-            memberVotes[member.memberId].independentVotes += 1;
+            memberVotes[member.memberId].leadershipVotes = 1; // max 1 leadership vote per member
         }
     });
 
-    // Step 4: Calculate total votes and enforce cap
-    Object.entries(memberVotes).forEach(([memberId, voteData]) => {
-        const clubVotesTotal = voteData.clubVotes.reduce((sum, cv) => sum + cv.votes, 0);
-        voteData.totalVotes = clubVotesTotal + voteData.independentVotes;
+    // Step 4: Calculate totals
+    Object.values(memberVotes).forEach(vd => {
+        const clubTotal = vd.clubVotes.reduce((sum, cv) => sum + cv.votes, 0);
+        vd.totalVotes = clubTotal + vd.leadershipVotes;
     });
 
-    // Step 5: Redistribute overflow
+    // Step 5: Redistribute overflow (club votes capped at 2; total capped at 3)
     memberVotes = redistributeOverflow(memberVotes, clubs, councilById, registered, validationIssues);
 
-    // Step 6: Filter output to only registered members
+    // Step 6: Build output (registered + paid members only)
     const result = [];
     registeredMembers.forEach(regMember => {
-        const councilEntries = councilById[regMember.memberId];
-        if (!councilEntries) {
-            validationIssues.push({
-                type: 'missingCouncil',
-                message: `Registered member ${regMember.memberId} not found in Council list`
-            });
+        if (!registered.has(regMember.memberId)) {
+            if (!councilById[regMember.memberId]) {
+                validationIssues.push({
+                    type: 'missingCouncil',
+                    message: `Registered member ${regMember.memberId} not found in Council list`
+                });
+            }
             return;
         }
 
@@ -380,140 +387,150 @@ function computeVotes(councilMembers, registeredMembers) {
             : 0;
 
         result.push({
-            memberName: [regMember.firstName || regMember.name, regMember.lastName]
-                .filter(Boolean)
-                .join(' ')
-                .trim(),
+            memberName: [regMember.name, regMember.lastName].filter(Boolean).join(' ').trim(),
             memberId: regMember.memberId,
             email: regMember.email,
-            votes: votes
+            votes
         });
     });
 
-    // Sort by member ID for determinism
-    result.sort((a, b) => {
-        const aNum = parseInt(a.memberId, 10);
-        const bNum = parseInt(b.memberId, 10);
-        return aNum - bNum;
-    });
+    // Sort by member ID ascending for determinism
+    result.sort((a, b) => parseInt(a.memberId, 10) - parseInt(b.memberId, 10));
 
     return { result, validationIssues };
 }
 
 /**
- * Redistribute votes for members exceeding vote cap
+ * Redistribute votes for members whose club votes exceed the 2-vote club cap.
+ *
+ * Goal: maximise the number of clubs with vote representation.
+ *
+ * Per overflow member (sorted by club-vote total desc, member ID asc):
+ *   Pass 1 – Release clubs that have an eligible alternate registered officer.
+ *            The alternate absorbs those votes (club stays represented).
+ *   Pass 2 – If still over cap, drop highest-ID solo clubs (no available
+ *            alternate); those clubs become unrepresented (warning emitted).
+ *
+ * Eligibility for an alternate: opposite officer role in the same club,
+ * registered, paid, and their current club-vote total + transfer <= 2.
  */
 function redistributeOverflow(memberVotes, clubs, councilById, registered, validationIssues) {
-    let redone = true;
+    let changed = true;
 
-    while (redone) {
-        redone = false;
+    while (changed) {
+        changed = false;
 
-        // Identify overflow members
+        // Members whose club votes exceed the 2-vote cap
         const overflowMembers = Object.entries(memberVotes)
-            .filter(([_, vd]) => vd.totalVotes > MAX_VOTES_PER_MEMBER)
+            .filter(([_, vd]) => vd.clubVotes.reduce((s, cv) => s + cv.votes, 0) > 2)
             .map(([mid, vd]) => ({
                 memberId: mid,
-                totalVotes: vd.totalVotes,
-                clubCount: vd.clubVotes.length,
+                clubTotal: vd.clubVotes.reduce((s, cv) => s + cv.votes, 0),
                 voteData: vd
             }))
-            .sort((a, b) => {
-                // Sort by: (1) club count descending, (2) memberId ascending
-                if (b.clubCount !== a.clubCount) return b.clubCount - a.clubCount;
-                return parseInt(a.memberId, 10) - parseInt(b.memberId, 10);
-            });
+            .sort((a, b) =>
+                b.clubTotal !== a.clubTotal
+                    ? b.clubTotal - a.clubTotal
+                    : parseInt(a.memberId, 10) - parseInt(b.memberId, 10)
+            );
 
         if (overflowMembers.length === 0) break;
 
+        // Process one member per iteration so totals stay current
         const member = overflowMembers[0];
         const voteData = member.voteData;
-        let excess = voteData.totalVotes - MAX_VOTES_PER_MEMBER;
+        const councilRoles = councilById[member.memberId] || [];
 
-        // Attempt same-club reassignment
-        for (let i = 0; i < voteData.clubVotes.length && excess > 0; i++) {
-            const clubVote = voteData.clubVotes[i];
-            const club = clubs[clubVote.clubId];
-
-            if (!club) continue;
-
-            // Determine alternate officer
-            const councilRoles = councilById[member.memberId] || [];
-            const isPresident = councilRoles.some(c => c.clubId === clubVote.clubId && c.positionDescription === 'Club President');
-            const isVPE = councilRoles.some(c => c.clubId === clubVote.clubId && c.positionDescription === 'Club VP Education');
-
-            let alternateRegMembers = [];
-            if (isPresident && club.vpe.length > 0) {
-                alternateRegMembers = club.vpe.filter(m => registered.has(m.memberId));
-            } else if (isVPE && club.president.length > 0) {
-                alternateRegMembers = club.president.filter(m => registered.has(m.memberId));
+        /**
+         * Return eligible alternates for a given club/role that have room
+         * to absorb 'votesToTransfer' more club votes without exceeding the cap.
+         */
+        const getEligibleAlts = (clubId, memberRole, votesToTransfer) => {
+            const club = clubs[clubId];
+            if (!club) return [];
+            let pool = [];
+            if (memberRole === 'Club President') {
+                pool = club.vpe.filter(m => registered.has(m.memberId) && m.memberId !== member.memberId);
+            } else if (memberRole === 'Club VP Education') {
+                pool = club.president.filter(m => registered.has(m.memberId) && m.memberId !== member.memberId);
             }
+            return pool.filter(alt => {
+                const altClubTotal = memberVotes[alt.memberId]
+                    ? memberVotes[alt.memberId].clubVotes.reduce((s, c) => s + c.votes, 0)
+                    : 0;
+                return altClubTotal + votesToTransfer <= 2;
+            });
+        };
 
-            // Try to move votes to alternate registered officer
-            for (const alt of alternateRegMembers) {
-                if (excess <= 0) break;
+        // Enrich each club-vote entry with role context and available alts
+        const enriched = voteData.clubVotes.map(cv => {
+            const role = councilRoles.find(
+                r => r.clubId === cv.clubId &&
+                    (r.positionDescription === 'Club President' ||
+                     r.positionDescription === 'Club VP Education')
+            );
+            const memberRole = role ? role.positionDescription : null;
+            const alts = memberRole ? getEligibleAlts(cv.clubId, memberRole, cv.votes) : [];
+            return { ...cv, memberRole, alts, hasAlt: alts.length > 0 };
+        });
 
-                if (!memberVotes[alt.memberId]) {
-                    memberVotes[alt.memberId] = { clubVotes: [], independentVotes: 0 };
-                }
+        // Release clubs WITH eligible alternates first (club stays represented);
+        // within that group process lower club IDs first (member keeps lower IDs).
+        enriched.sort((a, b) => {
+            if (a.hasAlt !== b.hasAlt) return a.hasAlt ? -1 : 1; // hasAlt first
+            return parseInt(a.clubId, 10) - parseInt(b.clubId, 10);
+        });
 
-                const altTotalBefore = memberVotes[alt.memberId].clubVotes.reduce((sum, cv) => sum + cv.votes, 0) + memberVotes[alt.memberId].independentVotes;
+        let clubTotal = voteData.clubVotes.reduce((s, cv) => s + cv.votes, 0);
+        const toRemove = new Set();
 
-                if (altTotalBefore < MAX_VOTES_PER_MEMBER) {
-                    const canTake = Math.min(excess, MAX_VOTES_PER_MEMBER - altTotalBefore);
-                    
-                    // Move votes from current member to alternate
-                    voteData.clubVotes[i].votes -= canTake;
-                    memberVotes[alt.memberId].clubVotes.push({ clubId: clubVote.clubId, votes: canTake });
-                    excess -= canTake;
-                    redone = true;
-                }
+        // Pass 1: hand off clubs that have eligible alternates
+        for (const cv of enriched) {
+            if (clubTotal <= 2) break;
+            if (!cv.hasAlt) continue;
+
+            const alt = cv.alts[0];
+            if (!memberVotes[alt.memberId]) {
+                memberVotes[alt.memberId] = { clubVotes: [], leadershipVotes: 0 };
+            }
+            const existing = memberVotes[alt.memberId].clubVotes.find(x => x.clubId === cv.clubId);
+            if (existing) {
+                existing.votes += cv.votes;
+            } else {
+                memberVotes[alt.memberId].clubVotes.push({ clubId: cv.clubId, votes: cv.votes });
+            }
+            toRemove.add(cv.clubId);
+            clubTotal -= cv.votes;
+            changed = true;
+        }
+
+        // Pass 2: still over cap — drop highest-ID remaining solo clubs
+        if (clubTotal > 2) {
+            const remaining = enriched
+                .filter(cv => !toRemove.has(cv.clubId))
+                .sort((a, b) => parseInt(b.clubId, 10) - parseInt(a.clubId, 10));
+
+            for (const cv of remaining) {
+                if (clubTotal <= 2) break;
+                toRemove.add(cv.clubId);
+                clubTotal -= cv.votes;
+                validationIssues.push({
+                    type: 'unrepresentedClub',
+                    message: `Club ${clubs[cv.clubId]?.clubName || cv.clubId} (${cv.clubId}) lost representation due to vote cap overflow`
+                });
+                changed = true;
             }
         }
 
-        // If same-club reassignment didn't work, move to next-prioritized unrepresented club
-        if (excess > 0) {
-            // Find clubs with no representative
-            const representedClubs = new Set(voteData.clubVotes.map(cv => cv.clubId));
-            const unrepresentedClubs = Object.entries(clubs)
-                .filter(([cid, _]) => !representedClubs.has(cid))
-                .map(([cid, club]) => ({ clubId: cid, club }))
-                .sort((a, b) => parseInt(a.clubId, 10) - parseInt(b.clubId, 10));
-
-            for (const { clubId, club } of unrepresentedClubs) {
-                if (excess <= 0) break;
-
-                // Prefer VPE then President
-                let candidates = [];
-                candidates = club.vpe.filter(m => registered.has(m.memberId));
-                if (candidates.length === 0) {
-                    candidates = club.president.filter(m => registered.has(m.memberId));
-                }
-
-                for (const candidate of candidates) {
-                    if (excess <= 0) break;
-
-                    if (!memberVotes[candidate.memberId]) {
-                        memberVotes[candidate.memberId] = { clubVotes: [], independentVotes: 0 };
-                    }
-
-                    const candTotalBefore = memberVotes[candidate.memberId].clubVotes.reduce((sum, cv) => sum + cv.votes, 0) + memberVotes[candidate.memberId].independentVotes;
-
-                    if (candTotalBefore < MAX_VOTES_PER_MEMBER) {
-                        const canTake = Math.min(excess, MAX_VOTES_PER_MEMBER - candTotalBefore);
-                        voteData.clubVotes.push({ clubId, votes: canTake });
-                        memberVotes[candidate.memberId].clubVotes.push({ clubId, votes: canTake });
-                        excess -= canTake;
-                        redone = true;
-                    }
-                }
-            }
+        // Apply removals from overflow member
+        if (toRemove.size > 0) {
+            voteData.clubVotes = voteData.clubVotes.filter(cv => !toRemove.has(cv.clubId));
         }
 
-        // Recalculate totals
-        Object.entries(memberVotes).forEach(([_, vd]) => {
-            const clubTotal = vd.clubVotes.reduce((sum, cv) => sum + cv.votes, 0);
-            vd.totalVotes = clubTotal + vd.independentVotes;
+        // Recalculate all totals after each member is resolved
+        Object.values(memberVotes).forEach(vd => {
+            const ct = vd.clubVotes.reduce((s, cv) => s + cv.votes, 0);
+            vd.totalVotes = ct + (vd.leadershipVotes || 0);
         });
     }
 
@@ -544,7 +561,8 @@ function displayValidation(issues) {
     };
 
     issues.forEach(issue => {
-        const severity = issue.type === 'missingCouncil' ? 'error' : (issue.type === 'unrepresentedClub' ? 'warning' : 'info');
+        const severity = issue.type === 'missingCouncil' ? 'error' :
+            (issue.type === 'unrepresentedClub' || issue.type === 'duplicateRegistration' ? 'warning' : 'info');
         issueGroups[severity].push(issue.message);
     });
 
@@ -675,10 +693,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Parse and normalize
             const { members: councilMembers, validation: councilVal } = normalizeCouncilData(councilText);
-            const registeredMembers = normalizeRegistrationData(registrationText);
+            const { members: registeredMembers, duplicates: duplicateRegistrations } = normalizeRegistrationData(registrationText);
 
             // Compute votes
             const { result, validationIssues } = computeVotes(councilMembers, registeredMembers);
+
+            // Add duplicate registration warnings
+            duplicateRegistrations.forEach(memberId => {
+                validationIssues.push({
+                    type: 'duplicateRegistration',
+                    message: `Duplicate registration for member ${memberId}; last entry retained`
+                });
+            });
 
             // Display results
             displayValidation(validationIssues);

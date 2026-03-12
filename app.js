@@ -21,6 +21,218 @@ const CLUB_OFFICER_POSITIONS = ['Club President', 'Club VP Education'];
 
 // Maximum votes per member
 const MAX_VOTES_PER_MEMBER = 3;
+const UI_LANGUAGE_STORAGE_KEY = 'uiLanguage';
+
+const I18N = {
+    en: {
+        headerTitle: 'Toastmasters Council Voting',
+        headerSubtitle: 'Vote assignment based on Council Member and Registration lists',
+        languageLabel: 'Language',
+        languageEnglish: 'English',
+        languageSpanish: 'Spanish',
+        stepUpload: 'Step 1: Upload Files',
+        councilCsvLabel: 'Council Member List (CSV)',
+        registrationCsvLabel: 'Registration List (CSV)',
+        noFileSelected: 'No file selected',
+        processVotes: 'Process Votes',
+        processingVotes: '⏳ Processing...',
+        mappingTitle: 'Map Registration CSV Columns',
+        mappingSubtitle: 'We could not confidently detect all required fields. Select which CSV columns correspond to each output field.',
+        mappingMemberRequired: 'Member Number (required)',
+        mappingFirstName: 'First Name',
+        mappingLastName: 'Last Name',
+        mappingEmail: 'Email',
+        mappingAttendance: 'Attendance',
+        mappingPreviewTitle: 'Preview (first 5 rows)',
+        mappingMemberShort: 'Member #',
+        mappingCancel: 'Cancel',
+        mappingApply: 'Apply Mapping',
+        mappingNotSet: '-- Not set --',
+        mappingDefaultsToYes: '(defaults to Yes)',
+        mappingCancelledByUser: 'Column mapping was cancelled by the user.',
+        mappingErrorMemberRequired: 'Member Number is required.',
+        mappingErrorColumnsReused: 'Columns cannot be reused: {fieldA} and {fieldB} use the same source column.',
+        validationTitle: 'Validation Summary',
+        resultsTitle: 'Voting Results',
+        downloadCsv: '⬇ Download as CSV',
+        tableMemberName: 'Member Name',
+        tableMemberNumber: 'Member Number',
+        tableEmail: 'Email',
+        tableVotes: 'Votes Available',
+        statsTotalMembers: 'Total Members:',
+        statsTotalVotes: 'Total Votes Distributed:',
+        statsRepresentedClubs: 'Represented Clubs:',
+        statsAssignedClubVotes: 'Assigned Club Votes:',
+        statsAssignedLeadershipVotes: 'Assigned Leadership Votes:',
+        statsQuorumLabel: 'Quorum Met (1/3 of Member Clubs in good standing):',
+        quorumYes: 'Yes ({represented}/{total} clubs; required {required})',
+        quorumNo: 'No ({represented}/{total} clubs; required {required})',
+        rulesTitle: 'Voting Rules & Documentation',
+        rulesLink: 'Voting Rules',
+        rulesDescriptionPrefix: 'View the complete ',
+        rulesDescriptionSuffix: ' for details on vote assignment logic, redistribution, and eligibility criteria.',
+        rulesDescription: 'View the complete Voting Rules for details on vote assignment logic, redistribution, and eligibility criteria.',
+        footer: '© 2026 Toastmasters Council Voting System | Static Site Powered by GitHub Pages',
+        severityError: 'ERROR',
+        severityWarning: 'WARNING',
+        severityInfo: 'INFO',
+        alertSelectBothFiles: 'Please select both CSV files.',
+        alertProcessError: 'Error processing files: {message}',
+        errMissingFiles: 'Missing files',
+        errRegistrationRowCount: 'Registration CSV must contain header and at least one data row.',
+        errCouncilHeader: 'Could not find header row in Council CSV. Expected columns: Member ID, Position Description, etc.',
+        errCouncilColumns: 'Missing required columns: Member ID, Position Description',
+        warnClubUnrepresented: 'Club unrepresented: {clubName} ({clubId}) has no registered paid President or VP Education',
+        warnClubLostRepresentation: 'Club {clubName} ({clubId}) lost representation due to vote cap overflow',
+        errMissingCouncilMember: 'Registered member {memberId} not found in Council list',
+        warnDuplicateRegistration: 'Duplicate registration for member {memberId}; last entry retained'
+    },
+    es: {
+        headerTitle: 'Votacion del Consejo Toastmasters',
+        headerSubtitle: 'Asignacion de votos basada en listas del Consejo y de registro',
+        languageLabel: 'Idioma',
+        languageEnglish: 'Ingles',
+        languageSpanish: 'Espanol',
+        stepUpload: 'Paso 1: Cargar archivos',
+        councilCsvLabel: 'Lista de miembros del Consejo (CSV)',
+        registrationCsvLabel: 'Lista de registro (CSV)',
+        noFileSelected: 'Ningun archivo seleccionado',
+        processVotes: 'Procesar votos',
+        processingVotes: '⏳ Procesando...',
+        mappingTitle: 'Mapear columnas del CSV de registro',
+        mappingSubtitle: 'No se pudieron detectar todos los campos requeridos con confianza. Selecciona que columnas del CSV corresponden a cada campo de salida.',
+        mappingMemberRequired: 'Numero de socio (requerido)',
+        mappingFirstName: 'Nombre',
+        mappingLastName: 'Apellido',
+        mappingEmail: 'Correo electronico',
+        mappingAttendance: 'Asistencia',
+        mappingPreviewTitle: 'Vista previa (primeras 5 filas)',
+        mappingMemberShort: 'Socio #',
+        mappingCancel: 'Cancelar',
+        mappingApply: 'Aplicar mapeo',
+        mappingNotSet: '-- Sin asignar --',
+        mappingDefaultsToYes: '(por defecto Si)',
+        mappingCancelledByUser: 'El mapeo de columnas fue cancelado por el usuario.',
+        mappingErrorMemberRequired: 'El numero de socio es obligatorio.',
+        mappingErrorColumnsReused: 'No se pueden reutilizar columnas: {fieldA} y {fieldB} usan la misma columna de origen.',
+        validationTitle: 'Resumen de validacion',
+        resultsTitle: 'Resultados de votacion',
+        downloadCsv: '⬇ Descargar CSV',
+        tableMemberName: 'Nombre del socio',
+        tableMemberNumber: 'Numero de socio',
+        tableEmail: 'Correo electronico',
+        tableVotes: 'Votos disponibles',
+        statsTotalMembers: 'Total de socios:',
+        statsTotalVotes: 'Total de votos asignados:',
+        statsRepresentedClubs: 'Clubes representados:',
+        statsAssignedClubVotes: 'Votos de club asignados:',
+        statsAssignedLeadershipVotes: 'Votos de liderazgo asignados:',
+        statsQuorumLabel: 'Quorum alcanzado (1/3 de clubes en regla):',
+        quorumYes: 'Si ({represented}/{total} clubes; requeridos {required})',
+        quorumNo: 'No ({represented}/{total} clubes; requeridos {required})',
+        rulesTitle: 'Reglas y documentacion de votacion',
+        rulesLink: 'Reglas de votacion',
+        rulesDescriptionPrefix: 'Consulta las ',
+        rulesDescriptionSuffix: ' completas para detalles de asignacion, redistribucion y elegibilidad.',
+        rulesDescription: 'Consulta las Reglas de votacion completas para detalles de asignacion, redistribucion y elegibilidad.',
+        footer: '© 2026 Sistema de votacion del Consejo Toastmasters | Sitio estatico en GitHub Pages',
+        severityError: 'ERROR',
+        severityWarning: 'ADVERTENCIA',
+        severityInfo: 'INFO',
+        alertSelectBothFiles: 'Selecciona ambos archivos CSV.',
+        alertProcessError: 'Error al procesar archivos: {message}',
+        errMissingFiles: 'Faltan archivos',
+        errRegistrationRowCount: 'El CSV de registro debe tener encabezado y al menos una fila de datos.',
+        errCouncilHeader: 'No se encontro la fila de encabezado en el CSV del Consejo. Se esperaban columnas como Member ID y Position Description.',
+        errCouncilColumns: 'Faltan columnas requeridas: Member ID, Position Description',
+        warnClubUnrepresented: 'Club sin representacion: {clubName} ({clubId}) no tiene Presidente o VP de Educacion registrado y pagado',
+        warnClubLostRepresentation: 'El club {clubName} ({clubId}) perdio representacion por limite de votos',
+        errMissingCouncilMember: 'El socio registrado {memberId} no aparece en la lista del Consejo',
+        warnDuplicateRegistration: 'Registro duplicado para el socio {memberId}; se conserva la ultima entrada'
+    }
+};
+
+let currentLanguage = 'en';
+const appState = {
+    lastResults: null,
+    lastReport: null,
+    lastValidationIssues: []
+};
+
+function resolveLanguage() {
+    try {
+        const saved = localStorage.getItem(UI_LANGUAGE_STORAGE_KEY);
+        if (saved && I18N[saved]) return saved;
+    } catch (err) {
+        // Ignore localStorage access issues.
+    }
+
+    const browserLang = (navigator.language || 'en').toLowerCase();
+    if (browserLang.startsWith('es')) return 'es';
+    return 'en';
+}
+
+function t(key, params = {}) {
+    const table = I18N[currentLanguage] || I18N.en;
+    const template = table[key] || I18N.en[key] || key;
+    return template.replace(/\{(\w+)\}/g, (_, token) => (params[token] !== undefined ? String(params[token]) : ''));
+}
+
+function setLanguage(lang) {
+    currentLanguage = I18N[lang] ? lang : 'en';
+    try {
+        localStorage.setItem(UI_LANGUAGE_STORAGE_KEY, currentLanguage);
+    } catch (err) {
+        // Ignore localStorage write issues.
+    }
+    applyTranslations();
+
+    // Re-render dynamic content in the selected language.
+    if (appState.lastValidationIssues.length > 0) {
+        displayValidation(appState.lastValidationIssues);
+    }
+    if (appState.lastResults) {
+        displayResults(appState.lastResults, appState.lastReport);
+    }
+}
+
+function applyTranslations() {
+    document.documentElement.lang = currentLanguage;
+
+    document.querySelectorAll('[data-i18n]').forEach((el) => {
+        const key = el.getAttribute('data-i18n');
+        el.textContent = t(key);
+    });
+
+    const languageSelect = document.getElementById('language-select');
+    if (languageSelect) {
+        languageSelect.value = currentLanguage;
+        languageSelect.setAttribute('aria-label', t('languageLabel'));
+    }
+
+    const councilInput = document.getElementById('council-file');
+    const regInput = document.getElementById('registration-file');
+    const councilName = document.getElementById('council-file-name');
+    const regName = document.getElementById('registration-file-name');
+
+    if (councilInput && councilName && (!councilInput.files || !councilInput.files.length)) {
+        councilName.textContent = t('noFileSelected');
+    }
+    if (regInput && regName && (!regInput.files || !regInput.files.length)) {
+        regName.textContent = t('noFileSelected');
+    }
+}
+
+function getFieldLabel(fieldKey) {
+    const map = {
+        memberId: t('tableMemberNumber'),
+        name: t('mappingFirstName'),
+        lastName: t('mappingLastName'),
+        email: t('mappingEmail'),
+        attending: t('mappingAttendance')
+    };
+    return map[fieldKey] || fieldKey;
+}
 
 const REGISTRATION_MAPPING_STORAGE_KEY = 'registrationColumnMappingsV1';
 const REGISTRATION_FIELD_CONFIG = [
@@ -126,14 +338,17 @@ function normalizeRegistrationMapping(mapping, headerLength) {
 function validateRegistrationMapping(mapping) {
     const errors = [];
     if (mapping.memberId === undefined) {
-        errors.push('Member Number is required.');
+        errors.push(t('mappingErrorMemberRequired'));
     }
 
     const used = new Map();
     Object.entries(mapping).forEach(([field, idx]) => {
         if (idx === undefined) return;
         if (used.has(idx)) {
-            errors.push(`Columns cannot be reused: ${field} and ${used.get(idx)} use the same source column.`);
+            errors.push(t('mappingErrorColumnsReused', {
+                fieldA: getFieldLabel(field),
+                fieldB: getFieldLabel(used.get(idx))
+            }));
         } else {
             used.set(idx, field);
         }
@@ -221,7 +436,7 @@ function normalizeCouncilData(csvText) {
     // Find header row and extract columns
     const headerIdx = findHeaderRowIndex(rows);
     if (headerIdx === -1) {
-        throw new Error('Could not find header row in Council CSV. Expected columns: Member ID, Position Description, etc.');
+        throw new Error(t('errCouncilHeader'));
     }
 
     const headerRow = rows[headerIdx];
@@ -244,7 +459,7 @@ function normalizeCouncilData(csvText) {
     };
 
     if (cols.memberId === undefined || cols.positionDescription === undefined) {
-        throw new Error('Missing required columns: Member ID, Position Description');
+        throw new Error(t('errCouncilColumns'));
     }
 
     // Parse data rows
@@ -285,7 +500,7 @@ function normalizeRegistrationData(csvText, options = {}) {
     const rows = parseCSV(csvText);
 
     if (rows.length < 2) {
-        throw new Error('Registration CSV must contain header and at least one data row.');
+        throw new Error(t('errRegistrationRowCount'));
     }
 
     const headerRow = rows[0];
@@ -466,7 +681,8 @@ function computeVotes(councilMembers, registeredMembers) {
         if (presReg.length === 0 && vpeReg.length === 0) {
             validationIssues.push({
                 type: 'unrepresentedClub',
-                message: `Club unrepresented: ${club.clubName} (${clubId}) has no registered paid President or VP Education`
+                messageKey: 'warnClubUnrepresented',
+                params: { clubName: club.clubName, clubId }
             });
             return;
         }
@@ -524,7 +740,8 @@ function computeVotes(councilMembers, registeredMembers) {
             if (!councilById[regMember.memberId]) {
                 validationIssues.push({
                     type: 'missingCouncil',
-                    message: `Registered member ${regMember.memberId} not found in Council list`
+                    messageKey: 'errMissingCouncilMember',
+                    params: { memberId: regMember.memberId }
                 });
             }
             return;
@@ -691,7 +908,11 @@ function redistributeOverflow(memberVotes, clubs, councilById, registered, valid
                 clubTotal -= cv.votes;
                 validationIssues.push({
                     type: 'unrepresentedClub',
-                    message: `Club ${clubs[cv.clubId]?.clubName || cv.clubId} (${cv.clubId}) lost representation due to vote cap overflow`
+                    messageKey: 'warnClubLostRepresentation',
+                    params: {
+                        clubName: clubs[cv.clubId]?.clubName || cv.clubId,
+                        clubId: cv.clubId
+                    }
                 });
                 changed = true;
             }
@@ -736,9 +957,10 @@ function displayValidation(issues) {
     };
 
     issues.forEach(issue => {
+        const message = issue.message || t(issue.messageKey, issue.params || {});
         const severity = issue.type === 'missingCouncil' ? 'error' :
             (issue.type === 'unrepresentedClub' || issue.type === 'duplicateRegistration' ? 'warning' : 'info');
-        issueGroups[severity].push(issue.message);
+        issueGroups[severity].push(message);
     });
 
     [...issueGroups.error, ...issueGroups.warning, ...issueGroups.info].forEach((msg, idx) => {
@@ -746,8 +968,13 @@ function displayValidation(issues) {
         const severity = 
             issueGroups.error.includes(msg) ? 'error' :
             issueGroups.warning.includes(msg) ? 'warning' : 'info';
+        const severityLabel = severity === 'error'
+            ? t('severityError')
+            : severity === 'warning'
+                ? t('severityWarning')
+                : t('severityInfo');
         li.className = severity;
-        li.textContent = `[${severity.toUpperCase()}] ${msg}`;
+        li.textContent = `[${severityLabel}] ${msg}`;
         container.appendChild(li);
     });
 
@@ -766,7 +993,7 @@ function renderMappingPreview(rows, mapping) {
             mapping.name !== undefined ? row[mapping.name] || '' : '',
             mapping.lastName !== undefined ? row[mapping.lastName] || '' : '',
             mapping.email !== undefined ? row[mapping.email] || '' : '',
-            mapping.attending !== undefined ? row[mapping.attending] || '' : '(defaults to Yes)'
+            mapping.attending !== undefined ? row[mapping.attending] || '' : t('mappingDefaultsToYes')
         ];
 
         tr.innerHTML = values.map((v) => `<td>${escapeHtml(v)}</td>`).join('');
@@ -786,7 +1013,7 @@ function requestRegistrationColumnMapping(rows, detectedColumns) {
         select.innerHTML = '';
         const blank = document.createElement('option');
         blank.value = '';
-        blank.textContent = '-- Not set --';
+        blank.textContent = t('mappingNotSet');
         select.appendChild(blank);
 
         headerRow.forEach((col, idx) => {
@@ -829,7 +1056,7 @@ function requestRegistrationColumnMapping(rows, detectedColumns) {
         const onChange = () => validateAndRender();
         const onCancel = () => {
             cleanup();
-            reject(new Error('Column mapping was cancelled by the user.'));
+            reject(new Error(t('mappingCancelledByUser')));
         };
         const onSubmit = (e) => {
             e.preventDefault();
@@ -890,8 +1117,16 @@ function displayResults(results, report) {
         assignedClubVotes.textContent = report.assignedClubVotes;
         assignedLeadershipVotes.textContent = report.assignedLeadershipVotes;
         quorumStatus.textContent = report.quorumMet
-            ? `Yes (${report.representedClubs}/${report.goodStandingClubCount} clubs; required ${report.quorumRequired})`
-            : `No (${report.representedClubs}/${report.goodStandingClubCount} clubs; required ${report.quorumRequired})`;
+            ? t('quorumYes', {
+                represented: report.representedClubs,
+                total: report.goodStandingClubCount,
+                required: report.quorumRequired
+            })
+            : t('quorumNo', {
+                represented: report.representedClubs,
+                total: report.goodStandingClubCount,
+                required: report.quorumRequired
+            });
     }
 
     section.classList.remove('hidden');
@@ -951,17 +1186,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const registrationInput = document.getElementById('registration-file');
     const processBtn = document.getElementById('process-btn');
     const downloadBtn = document.getElementById('download-csv-btn');
+    const languageSelect = document.getElementById('language-select');
 
-    let lastResults = null;
+    currentLanguage = resolveLanguage();
+    applyTranslations();
+
+    if (languageSelect) {
+        languageSelect.addEventListener('change', (e) => {
+            setLanguage(e.target.value);
+        });
+    }
 
     // Handle file input changes
     councilInput.addEventListener('change', (e) => {
-        const name = e.target.files[0] ? e.target.files[0].name : 'No file selected';
+        const name = e.target.files[0] ? e.target.files[0].name : t('noFileSelected');
         document.getElementById('council-file-name').textContent = name;
     });
 
     registrationInput.addEventListener('change', (e) => {
-        const name = e.target.files[0] ? e.target.files[0].name : 'No file selected';
+        const name = e.target.files[0] ? e.target.files[0].name : t('noFileSelected');
         document.getElementById('registration-file-name').textContent = name;
     });
 
@@ -969,11 +1212,11 @@ document.addEventListener('DOMContentLoaded', () => {
     processBtn.addEventListener('click', async () => {
         try {
             processBtn.disabled = true;
-            processBtn.textContent = '⏳ Processing...';
+            processBtn.textContent = t('processingVotes');
 
             if (!councilInput.files.length || !registrationInput.files.length) {
-                alert('Please select both CSV files.');
-                throw new Error('Missing files');
+                alert(t('alertSelectBothFiles'));
+                throw new Error(t('errMissingFiles'));
             }
 
             // Read files
@@ -1016,22 +1259,28 @@ document.addEventListener('DOMContentLoaded', () => {
             duplicateRegistrations.forEach(memberId => {
                 validationIssues.push({
                     type: 'duplicateRegistration',
-                    message: `Duplicate registration for member ${memberId}; last entry retained`
+                    messageKey: 'warnDuplicateRegistration',
+                    params: { memberId }
                 });
             });
 
             // Display results
+            appState.lastValidationIssues = validationIssues;
+            appState.lastResults = result;
+            appState.lastReport = report;
             displayValidation(validationIssues);
             displayResults(result, report);
-            lastResults = result;
 
-            processBtn.textContent = 'Process Votes';
+            processBtn.textContent = t('processVotes');
         } catch (error) {
             console.error(error);
-            alert(`Error processing files: ${error.message}`);
+            alert(t('alertProcessError', { message: error.message }));
             document.getElementById('validation-section').classList.add('hidden');
             document.getElementById('results-section').classList.add('hidden');
-            processBtn.textContent = 'Process Votes';
+            appState.lastValidationIssues = [];
+            appState.lastResults = null;
+            appState.lastReport = null;
+            processBtn.textContent = t('processVotes');
         } finally {
             processBtn.disabled = false;
         }
@@ -1039,8 +1288,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Handle download button
     downloadBtn.addEventListener('click', () => {
-        if (lastResults) {
-            downloadAsCSV(lastResults);
+        if (appState.lastResults) {
+            downloadAsCSV(appState.lastResults);
         }
     });
 });

@@ -9,69 +9,76 @@
 <body>
     <div class="container">
         <header>
-            <h1>Toastmasters Council Voting</h1>
-            <p class="subtitle">Vote assignment based on Council Member and Registration lists</p>
+            <div class="language-switcher">
+                <label for="language-select" data-i18n="languageLabel">Language</label>
+                <select id="language-select" aria-label="Language selector">
+                    <option value="en" data-i18n="languageEnglish">English</option>
+                    <option value="es" data-i18n="languageSpanish">Spanish</option>
+                </select>
+            </div>
+            <h1 data-i18n="headerTitle">Toastmasters Council Voting</h1>
+            <p class="subtitle" data-i18n="headerSubtitle">Vote assignment based on Council Member and Registration lists</p>
         </header>
 
         <main>
             <!-- Input Section -->
             <section class="input-section">
-                <h2>Step 1: Upload Files</h2>
+                <h2 data-i18n="stepUpload">Step 1: Upload Files</h2>
                 <div class="upload-grid">
                     <div class="upload-card">
                         <label for="council-file" class="file-label">
-                            <span class="label-text">Council Member List (CSV)</span>
+                            <span class="label-text" data-i18n="councilCsvLabel">Council Member List (CSV)</span>
                             <input type="file" id="council-file" accept=".csv" />
-                            <span class="file-name" id="council-file-name">No file selected</span>
+                            <span class="file-name" id="council-file-name" data-i18n="noFileSelected">No file selected</span>
                         </label>
                     </div>
                     <div class="upload-card">
                         <label for="registration-file" class="file-label">
-                            <span class="label-text">Registration List (CSV)</span>
+                            <span class="label-text" data-i18n="registrationCsvLabel">Registration List (CSV)</span>
                             <input type="file" id="registration-file" accept=".csv" />
-                            <span class="file-name" id="registration-file-name">No file selected</span>
+                            <span class="file-name" id="registration-file-name" data-i18n="noFileSelected">No file selected</span>
                         </label>
                     </div>
                 </div>
 
-                <button id="process-btn" class="btn btn-primary">Process Votes</button>
+                <button id="process-btn" class="btn btn-primary" data-i18n="processVotes">Process Votes</button>
             </section>
 
             <section id="column-mapping-modal" class="mapping-modal hidden" aria-hidden="true">
                 <div class="mapping-dialog" role="dialog" aria-modal="true" aria-labelledby="mapping-title">
-                    <h2 id="mapping-title">Map Registration CSV Columns</h2>
-                    <p class="mapping-subtitle">We could not confidently detect all required fields. Select which CSV columns correspond to each output field.</p>
+                    <h2 id="mapping-title" data-i18n="mappingTitle">Map Registration CSV Columns</h2>
+                    <p class="mapping-subtitle" data-i18n="mappingSubtitle">We could not confidently detect all required fields. Select which CSV columns correspond to each output field.</p>
 
                     <div id="mapping-errors" class="mapping-errors"></div>
 
                     <form id="column-mapping-form" class="mapping-form">
                         <div class="mapping-grid">
-                            <label for="map-memberId">Member Number (required)</label>
+                            <label for="map-memberId" data-i18n="mappingMemberRequired">Member Number (required)</label>
                             <select id="map-memberId"></select>
 
-                            <label for="map-name">First Name</label>
+                            <label for="map-name" data-i18n="mappingFirstName">First Name</label>
                             <select id="map-name"></select>
 
-                            <label for="map-lastName">Last Name</label>
+                            <label for="map-lastName" data-i18n="mappingLastName">Last Name</label>
                             <select id="map-lastName"></select>
 
-                            <label for="map-email">Email</label>
+                            <label for="map-email" data-i18n="mappingEmail">Email</label>
                             <select id="map-email"></select>
 
-                            <label for="map-attending">Attendance</label>
+                            <label for="map-attending" data-i18n="mappingAttendance">Attendance</label>
                             <select id="map-attending"></select>
                         </div>
 
-                        <h3>Preview (first 5 rows)</h3>
+                        <h3 data-i18n="mappingPreviewTitle">Preview (first 5 rows)</h3>
                         <div class="mapping-preview-container">
                             <table class="mapping-preview-table">
                                 <thead>
                                     <tr>
-                                        <th>Member #</th>
-                                        <th>First Name</th>
-                                        <th>Last Name</th>
-                                        <th>Email</th>
-                                        <th>Attendance</th>
+                                        <th data-i18n="mappingMemberShort">Member #</th>
+                                        <th data-i18n="mappingFirstName">First Name</th>
+                                        <th data-i18n="mappingLastName">Last Name</th>
+                                        <th data-i18n="mappingEmail">Email</th>
+                                        <th data-i18n="mappingAttendance">Attendance</th>
                                     </tr>
                                 </thead>
                                 <tbody id="mapping-preview-body"></tbody>
@@ -79,8 +86,8 @@
                         </div>
 
                         <div class="mapping-actions">
-                            <button type="button" id="mapping-cancel-btn" class="btn btn-secondary">Cancel</button>
-                            <button type="submit" id="mapping-confirm-btn" class="btn btn-primary">Apply Mapping</button>
+                            <button type="button" id="mapping-cancel-btn" class="btn btn-secondary" data-i18n="mappingCancel">Cancel</button>
+                            <button type="submit" id="mapping-confirm-btn" class="btn btn-primary" data-i18n="mappingApply">Apply Mapping</button>
                         </div>
                     </form>
                 </div>
@@ -88,26 +95,26 @@
 
             <!-- Validation & Error Section -->
             <section id="validation-section" class="validation-section hidden">
-                <h2>Validation Summary</h2>
+                <h2 data-i18n="validationTitle">Validation Summary</h2>
                 <div id="validation-messages" class="validation-messages"></div>
             </section>
 
             <!-- Results Section -->
             <section id="results-section" class="results-section hidden">
-                <h2>Voting Results</h2>
+                <h2 data-i18n="resultsTitle">Voting Results</h2>
                 
                 <div class="results-toolbar">
-                    <button id="download-csv-btn" class="btn btn-secondary">⬇ Download as CSV</button>
+                    <button id="download-csv-btn" class="btn btn-secondary" data-i18n="downloadCsv">⬇ Download as CSV</button>
                 </div>
 
                 <div class="table-container">
                     <table id="results-table" class="results-table">
                         <thead>
                             <tr>
-                                <th>Member Name</th>
-                                <th>Member Number</th>
-                                <th>Email</th>
-                                <th>Votes Available</th>
+                                <th data-i18n="tableMemberName">Member Name</th>
+                                <th data-i18n="tableMemberNumber">Member Number</th>
+                                <th data-i18n="tableEmail">Email</th>
+                                <th data-i18n="tableVotes">Votes Available</th>
                             </tr>
                         </thead>
                         <tbody id="results-body">
@@ -116,27 +123,28 @@
                 </div>
 
                 <div class="stats-summary">
-                    <p><strong>Total Members:</strong> <span id="total-members">0</span></p>
-                    <p><strong>Total Votes Distributed:</strong> <span id="total-votes">0</span></p>
-                    <p><strong>Represented Clubs:</strong> <span id="represented-clubs">0</span></p>
-                    <p><strong>Assigned Club Votes:</strong> <span id="assigned-club-votes">0</span></p>
-                    <p><strong>Assigned Leadership Votes:</strong> <span id="assigned-leadership-votes">0</span></p>
-                    <p><strong>Quorum Met (1/3 of Member Clubs in good standing):</strong> <span id="quorum-status">No</span></p>
+                    <p><strong data-i18n="statsTotalMembers">Total Members:</strong> <span id="total-members">0</span></p>
+                    <p><strong data-i18n="statsTotalVotes">Total Votes Distributed:</strong> <span id="total-votes">0</span></p>
+                    <p><strong data-i18n="statsRepresentedClubs">Represented Clubs:</strong> <span id="represented-clubs">0</span></p>
+                    <p><strong data-i18n="statsAssignedClubVotes">Assigned Club Votes:</strong> <span id="assigned-club-votes">0</span></p>
+                    <p><strong data-i18n="statsAssignedLeadershipVotes">Assigned Leadership Votes:</strong> <span id="assigned-leadership-votes">0</span></p>
+                    <p><strong data-i18n="statsQuorumLabel">Quorum Met (1/3 of Member Clubs in good standing):</strong> <span id="quorum-status">No</span></p>
                 </div>
             </section>
 
             <!-- Voting Rules Link -->
             <section class="rules-section">
-                <h3>Voting Rules & Documentation</h3>
+                <h3 data-i18n="rulesTitle">Voting Rules & Documentation</h3>
                 <p>
-                    View the complete <a href="docs/voting-rules.md" target="_blank">Voting Rules</a> 
-                    for details on vote assignment logic, redistribution, and eligibility criteria.
+                    <span data-i18n="rulesDescriptionPrefix">View the complete</span>
+                    <a href="docs/voting-rules.md" target="_blank" data-i18n="rulesLink">Voting Rules</a>
+                    <span data-i18n="rulesDescriptionSuffix">for details on vote assignment logic, redistribution, and eligibility criteria.</span>
                 </p>
             </section>
         </main>
 
         <footer>
-            <p>&copy; 2026 Toastmasters Council Voting System | Static Site Powered by GitHub Pages</p>
+            <p data-i18n="footer">&copy; 2026 Toastmasters Council Voting System | Static Site Powered by GitHub Pages</p>
         </footer>
     </div>
 

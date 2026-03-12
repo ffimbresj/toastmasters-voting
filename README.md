@@ -11,6 +11,7 @@ This application:
 4. **Displays results** in an interactive HTML table
 5. **Exports to CSV** for further processing or record-keeping
 6. **Supports manual field mapping** when a registration CSV uses unfamiliar headers
+7. **Supports full UI language switching** (English/Spanish) including labels, messages, and modal text
 
 The results summary also reports:
 - Represented clubs
@@ -60,6 +61,8 @@ voting/
 4. Click "Process Votes" to compute vote assignments
 
 5. Review the results table and download the CSV if needed
+
+6. Use the language selector in the header to switch the interface between English and Spanish
 
 ### GitHub Pages Deployment
 
@@ -111,6 +114,8 @@ If auto-detection cannot identify required columns confidently, the app opens a 
 
 The selected mapping is cached for the same header format during the current browser session.
 
+UI language selection is independent from CSV parsing. The parser still supports English and Spanish CSV headers regardless of which UI language is selected.
+
 **Notes**:
 - Members are considered registered if present in this list **and** `Will you be attending? = Yes` (case-insensitive)
 - Duplicate entries for same Member Number are deduplicated (last occurrence retained)
@@ -155,6 +160,7 @@ See [samples/README.md](samples/README.md) for detailed test scenarios.
 ✅ **Pure Client-Side**: No backend required; works completely in the browser  
 ✅ **Robust CSV Parsing**: Handles quoted fields, embedded commas, multiline values  
 ✅ **Flexible Registration Mapping**: Auto-detects known headers and falls back to manual mapping for custom CSV formats  
+✅ **Bilingual UI**: Live switch between English and Spanish for interface text and runtime messages  
 ✅ **Deterministic Output**: Same input always produces same output  
 ✅ **Comprehensive Validation**: Reports missing registrations, duplicate entries, unrepresented clubs  
 ✅ **Governance Metrics**: Shows represented clubs, club/leadership vote totals, and quorum status  

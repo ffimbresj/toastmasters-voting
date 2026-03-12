@@ -22,6 +22,126 @@ const CLUB_OFFICER_POSITIONS = ['Club President', 'Club VP Education'];
 // Maximum votes per member
 const MAX_VOTES_PER_MEMBER = 3;
 
+const REGISTRATION_MAPPING_STORAGE_KEY = 'registrationColumnMappingsV1';
+const REGISTRATION_FIELD_CONFIG = [
+    { key: 'memberId', label: 'Member Number', required: true },
+    { key: 'name', label: 'First Name', required: false },
+    { key: 'lastName', label: 'Last Name', required: false },
+    { key: 'email', label: 'Email', required: false },
+    { key: 'attending', label: 'Attendance', required: false }
+];
+
+const REGISTRATION_FIELD_ALIASES = {
+    memberId: ['member number', 'numero de socio', 'numero socio', 'número de socio', 'member id', 'socio'],
+    name: ['name', 'first name', 'nombre', 'nombre(s)', 'nombres'],
+    lastName: ['last name', 'apellido', 'apellidos', 'surname'],
+    email: ['email', 'correo', 'correo electronico', 'correo electrónico'],
+    attending: ['will you be attending?', 'attending', 'asistiras', 'asistirás', 'asistencia', 'attend']
+};
+
+function normalizeText(value) {
+    return (value || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
+}
+
+function buildRegistrationHeaderSignature(headerRow) {
+    return headerRow.map((h) => normalizeText(h)).join('|');
+}
+
+function loadRegistrationMappingCache() {
+    try {
+        const raw = sessionStorage.getItem(REGISTRATION_MAPPING_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : {};
+    } catch (err) {
+        return {};
+    }
+}
+
+function saveRegistrationMappingCache(cache) {
+    try {
+        sessionStorage.setItem(REGISTRATION_MAPPING_STORAGE_KEY, JSON.stringify(cache));
+    } catch (err) {
+        // Ignore storage write failures (private mode / disabled storage).
+    }
+}
+
+function getCachedRegistrationMapping(signature) {
+    const cache = loadRegistrationMappingCache();
+    return cache[signature] || null;
+}
+
+function setCachedRegistrationMapping(signature, mapping) {
+    const cache = loadRegistrationMappingCache();
+    cache[signature] = mapping;
+    saveRegistrationMappingCache(cache);
+}
+
+function detectRegistrationColumns(headerRow) {
+    const normalizedHeaders = headerRow.map((col) => normalizeText(col));
+    const detected = {};
+
+    const findBestIndex = (fieldKey) => {
+        const aliases = REGISTRATION_FIELD_ALIASES[fieldKey] || [];
+        let best = { idx: undefined, score: 0 };
+
+        normalizedHeaders.forEach((header, idx) => {
+            for (const alias of aliases) {
+                const normAlias = normalizeText(alias);
+                if (header === normAlias && best.score < 1.0) {
+                    best = { idx, score: 1.0 };
+                } else if (header.includes(normAlias) && best.score < 0.75) {
+                    best = { idx, score: 0.75 };
+                }
+            }
+        });
+
+        return best;
+    };
+
+    REGISTRATION_FIELD_CONFIG.forEach((field) => {
+        const best = findBestIndex(field.key);
+        if (best.idx !== undefined) detected[field.key] = best.idx;
+    });
+
+    return { detected, normalizedHeaders };
+}
+
+function normalizeRegistrationMapping(mapping, headerLength) {
+    const normalized = {};
+    REGISTRATION_FIELD_CONFIG.forEach((field) => {
+        const raw = mapping ? mapping[field.key] : undefined;
+        if (raw === '' || raw === null || raw === undefined) {
+            normalized[field.key] = undefined;
+            return;
+        }
+        const idx = Number(raw);
+        normalized[field.key] = Number.isInteger(idx) && idx >= 0 && idx < headerLength ? idx : undefined;
+    });
+    return normalized;
+}
+
+function validateRegistrationMapping(mapping) {
+    const errors = [];
+    if (mapping.memberId === undefined) {
+        errors.push('Member Number is required.');
+    }
+
+    const used = new Map();
+    Object.entries(mapping).forEach(([field, idx]) => {
+        if (idx === undefined) return;
+        if (used.has(idx)) {
+            errors.push(`Columns cannot be reused: ${field} and ${used.get(idx)} use the same source column.`);
+        } else {
+            used.set(idx, field);
+        }
+    });
+
+    return errors;
+}
+
 // ============================================================================
 // CSV Parsing & Normalization
 // ============================================================================
@@ -161,7 +281,7 @@ function normalizeCouncilData(csvText) {
 /**
  * Normalize registration CSV: extract members with attendance flag
  */
-function normalizeRegistrationData(csvText) {
+function normalizeRegistrationData(csvText, options = {}) {
     const rows = parseCSV(csvText);
 
     if (rows.length < 2) {
@@ -169,56 +289,20 @@ function normalizeRegistrationData(csvText) {
     }
 
     const headerRow = rows[0];
+    const detected = detectRegistrationColumns(headerRow);
+    const cols = normalizeRegistrationMapping(
+        options.columnMapping || detected.detected,
+        headerRow.length
+    );
 
-    const normalizeText = (value) =>
-        (value || '')
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .trim();
-
-    const normalizedHeaders = headerRow.map((col) => normalizeText(col));
-    const columnMap = {};
-    normalizedHeaders.forEach((col, idx) => {
-        columnMap[col] = idx;
-    });
-
-    const firstDefined = (...keys) => {
-        for (const key of keys) {
-            const normKey = normalizeText(key);
-            if (columnMap[normKey] !== undefined) return columnMap[normKey];
-        }
-        return undefined;
-    };
-
-    const findByKeyword = (...keywords) => {
-        for (let i = 0; i < normalizedHeaders.length; i++) {
-            const h = normalizedHeaders[i];
-            if (keywords.some((k) => h.includes(normalizeText(k)))) {
-                return i;
-            }
-        }
-        return undefined;
-    };
-
-    // Map expected columns
-    const cols = {
-        memberId: firstDefined('member number', 'numero de socio', 'número de socio'),
-        name: firstDefined('name', 'nombre(s)', 'nombres'),
-        lastName: firstDefined('last name', 'apellidos'),
-        email: firstDefined('email', 'proporciona correctamente tu correo electronico', 'proporciona correctamente tu correo electrónico'),
-        attending: firstDefined('will you be attending?', '¿asistiras a la reunion?', '¿asistirás a la reunión?', 'asistiras a la reunion?', 'asistirás a la reunión?')
-    };
-
-    // Fallback detection for slightly different form labels.
-    if (cols.memberId === undefined) cols.memberId = findByKeyword('member number', 'numero de socio', 'número de socio', 'socio');
-    if (cols.name === undefined) cols.name = findByKeyword('name', 'nombre');
-    if (cols.lastName === undefined) cols.lastName = findByKeyword('last name', 'apellido');
-    if (cols.email === undefined) cols.email = findByKeyword('email', 'correo');
-    if (cols.attending === undefined) cols.attending = findByKeyword('attend', 'asist');
-
-    if (cols.memberId === undefined) {
-        throw new Error('Missing required column: Member Number / Numero de socio');
+    const mappingErrors = validateRegistrationMapping(cols);
+    if (mappingErrors.length > 0) {
+        const err = new Error('COLUMN_MAPPING_REQUIRED');
+        err.code = 'COLUMN_MAPPING_REQUIRED';
+        err.mappingErrors = mappingErrors;
+        err.headerRow = headerRow;
+        err.detectedColumns = detected.detected;
+        throw err;
     }
 
     // Auto-correct swapped email/attendance columns using row-value heuristics.
@@ -275,16 +359,16 @@ function normalizeRegistrationData(csvText) {
         }
         seenAny.add(memberId);
 
-        const attendingVal = normalizeText(row[cols.attending] || '');
+        const attendingVal = cols.attending !== undefined ? normalizeText(row[cols.attending] || '') : 'yes';
         const isAttending = attendingVal.startsWith('si') || ['yes', 'y', 'true', 'attending'].includes(attendingVal);
 
         if (isAttending) {
             // Overwrite — last occurrence retained
             memberMap.set(memberId, {
                 memberId,
-                name: row[cols.name] || '',
-                lastName: row[cols.lastName] || '',
-                email: row[cols.email] || ''
+                name: cols.name !== undefined ? row[cols.name] || '' : '',
+                lastName: cols.lastName !== undefined ? row[cols.lastName] || '' : '',
+                email: cols.email !== undefined ? row[cols.email] || '' : ''
             });
         } else {
             // Last entry says "not attending" — remove from eligible list
@@ -292,7 +376,13 @@ function normalizeRegistrationData(csvText) {
         }
     }
 
-    return { members: Array.from(memberMap.values()), duplicates: duplicateIds };
+    return {
+        members: Array.from(memberMap.values()),
+        duplicates: duplicateIds,
+        headerRow,
+        detectedColumns: detected.detected,
+        appliedColumns: cols
+    };
 }
 
 /**
@@ -342,6 +432,11 @@ function computeVotes(councilMembers, registeredMembers) {
 
     // Step 1: Identify eligible clubs and officers (paid council members, Complete clubs only)
     const clubs = {}; // clubId -> { clubName, president: [], vpe: [] }
+    const goodStandingClubIds = new Set(
+        councilMembers
+            .filter(m => m.clubStatus === 'Complete' && m.clubId)
+            .map(m => m.clubId)
+    );
 
     paidCouncilMembers.forEach(member => {
         if (member.clubStatus !== 'Complete') return;
@@ -439,6 +534,8 @@ function computeVotes(councilMembers, registeredMembers) {
             ? memberVotes[regMember.memberId].totalVotes
             : 0;
 
+        if (votes <= 0) return; // Do not report members with zero assigned votes
+
         result.push({
             memberName: [regMember.name, regMember.lastName].filter(Boolean).join(' ').trim(),
             memberId: regMember.memberId,
@@ -450,7 +547,32 @@ function computeVotes(councilMembers, registeredMembers) {
     // Sort by member ID ascending for determinism
     result.sort((a, b) => parseInt(a.memberId, 10) - parseInt(b.memberId, 10));
 
-    return { result, validationIssues };
+    // Reporting metrics
+    const representedClubs = new Set();
+    let assignedClubVotes = 0;
+    let assignedLeadershipVotes = 0;
+
+    Object.values(memberVotes).forEach(vd => {
+        vd.clubVotes.forEach(cv => {
+            representedClubs.add(cv.clubId);
+            assignedClubVotes += cv.votes;
+        });
+        assignedLeadershipVotes += vd.leadershipVotes || 0;
+    });
+
+    const quorumRequired = Math.ceil(goodStandingClubIds.size / 3);
+    const quorumMet = representedClubs.size >= quorumRequired;
+
+    const report = {
+        representedClubs: representedClubs.size,
+        assignedClubVotes,
+        assignedLeadershipVotes,
+        goodStandingClubCount: goodStandingClubIds.size,
+        quorumRequired,
+        quorumMet
+    };
+
+    return { result, validationIssues, report };
 }
 
 /**
@@ -632,14 +754,119 @@ function displayValidation(issues) {
     section.classList.remove('hidden');
 }
 
+function renderMappingPreview(rows, mapping) {
+    const previewBody = document.getElementById('mapping-preview-body');
+    if (!previewBody) return;
+
+    previewBody.innerHTML = '';
+    rows.slice(1, 6).forEach((row) => {
+        const tr = document.createElement('tr');
+        const values = [
+            mapping.memberId !== undefined ? row[mapping.memberId] || '' : '',
+            mapping.name !== undefined ? row[mapping.name] || '' : '',
+            mapping.lastName !== undefined ? row[mapping.lastName] || '' : '',
+            mapping.email !== undefined ? row[mapping.email] || '' : '',
+            mapping.attending !== undefined ? row[mapping.attending] || '' : '(defaults to Yes)'
+        ];
+
+        tr.innerHTML = values.map((v) => `<td>${escapeHtml(v)}</td>`).join('');
+        previewBody.appendChild(tr);
+    });
+}
+
+function requestRegistrationColumnMapping(rows, detectedColumns) {
+    const modal = document.getElementById('column-mapping-modal');
+    const form = document.getElementById('column-mapping-form');
+    const errorBox = document.getElementById('mapping-errors');
+    const confirmBtn = document.getElementById('mapping-confirm-btn');
+    const cancelBtn = document.getElementById('mapping-cancel-btn');
+    const headerRow = rows[0];
+
+    const buildOptions = (select) => {
+        select.innerHTML = '';
+        const blank = document.createElement('option');
+        blank.value = '';
+        blank.textContent = '-- Not set --';
+        select.appendChild(blank);
+
+        headerRow.forEach((col, idx) => {
+            const opt = document.createElement('option');
+            opt.value = String(idx);
+            opt.textContent = `${idx + 1}. ${col}`;
+            select.appendChild(opt);
+        });
+    };
+
+    REGISTRATION_FIELD_CONFIG.forEach((field) => {
+        const select = document.getElementById(`map-${field.key}`);
+        if (!select) return;
+        buildOptions(select);
+        if (detectedColumns && detectedColumns[field.key] !== undefined) {
+            select.value = String(detectedColumns[field.key]);
+        }
+    });
+
+    const readMapping = () => {
+        const mapping = {};
+        REGISTRATION_FIELD_CONFIG.forEach((field) => {
+            const select = document.getElementById(`map-${field.key}`);
+            mapping[field.key] = select && select.value !== '' ? Number(select.value) : undefined;
+        });
+        return mapping;
+    };
+
+    const validateAndRender = () => {
+        const mapping = readMapping();
+        const validationErrors = validateRegistrationMapping(mapping);
+        renderMappingPreview(rows, mapping);
+
+        errorBox.innerHTML = validationErrors.map((msg) => `<p>${escapeHtml(msg)}</p>`).join('');
+        confirmBtn.disabled = validationErrors.length > 0;
+        return { mapping, validationErrors };
+    };
+
+    return new Promise((resolve, reject) => {
+        const onChange = () => validateAndRender();
+        const onCancel = () => {
+            cleanup();
+            reject(new Error('Column mapping was cancelled by the user.'));
+        };
+        const onSubmit = (e) => {
+            e.preventDefault();
+            const { mapping, validationErrors } = validateAndRender();
+            if (validationErrors.length > 0) return;
+            cleanup();
+            resolve(mapping);
+        };
+
+        const cleanup = () => {
+            form.removeEventListener('change', onChange);
+            form.removeEventListener('submit', onSubmit);
+            cancelBtn.removeEventListener('click', onCancel);
+            modal.classList.add('hidden');
+        };
+
+        form.addEventListener('change', onChange);
+        form.addEventListener('submit', onSubmit);
+        cancelBtn.addEventListener('click', onCancel);
+
+        validateAndRender();
+        modal.classList.remove('hidden');
+    });
+}
+
 /**
  * Display voting results in table
  */
-function displayResults(results) {
+function displayResults(results, report) {
     const section = document.getElementById('results-section');
     const tbody = document.getElementById('results-body');
     const totalMembers = document.getElementById('total-members');
     const totalVotes = document.getElementById('total-votes');
+    const representedClubs = document.getElementById('represented-clubs');
+    const assignedClubVotes = document.getElementById('assigned-club-votes');
+    const assignedLeadershipVotes = document.getElementById('assigned-leadership-votes');
+    const quorumStatus = document.getElementById('quorum-status');
 
     tbody.innerHTML = '';
 
@@ -649,7 +876,7 @@ function displayResults(results) {
             <td>${escapeHtml(member.memberName)}</td>
             <td>${escapeHtml(member.memberId)}</td>
             <td><a href="mailto:${escapeHtml(member.email)}">${escapeHtml(member.email)}</a></td>
-            <td style="text-align: center; font-weight: bold; color: #667eea;">${member.votes}</td>
+            <td style="text-align: center; font-weight: bold; color: #004165;">${member.votes}</td>
         `;
         tbody.appendChild(tr);
     });
@@ -657,6 +884,15 @@ function displayResults(results) {
     const sum = results.reduce((acc, m) => acc + m.votes, 0);
     totalMembers.textContent = results.length;
     totalVotes.textContent = sum;
+
+    if (report) {
+        representedClubs.textContent = report.representedClubs;
+        assignedClubVotes.textContent = report.assignedClubVotes;
+        assignedLeadershipVotes.textContent = report.assignedLeadershipVotes;
+        quorumStatus.textContent = report.quorumMet
+            ? `Yes (${report.representedClubs}/${report.goodStandingClubCount} clubs; required ${report.quorumRequired})`
+            : `No (${report.representedClubs}/${report.goodStandingClubCount} clubs; required ${report.quorumRequired})`;
+    }
 
     section.classList.remove('hidden');
 }
@@ -745,11 +981,36 @@ document.addEventListener('DOMContentLoaded', () => {
             const registrationText = await registrationInput.files[0].text();
 
             // Parse and normalize
-            const { members: councilMembers, validation: councilVal } = normalizeCouncilData(councilText);
-            const { members: registeredMembers, duplicates: duplicateRegistrations } = normalizeRegistrationData(registrationText);
+            const { members: councilMembers } = normalizeCouncilData(councilText);
+
+            const registrationRows = parseCSV(registrationText);
+            const registrationHeader = registrationRows[0] || [];
+            const headerSignature = buildRegistrationHeaderSignature(registrationHeader);
+            const cachedMapping = getCachedRegistrationMapping(headerSignature);
+
+            let registrationData;
+            try {
+                registrationData = normalizeRegistrationData(registrationText, {
+                    columnMapping: cachedMapping || undefined
+                });
+            } catch (error) {
+                if (error.code !== 'COLUMN_MAPPING_REQUIRED') throw error;
+
+                const selectedMapping = await requestRegistrationColumnMapping(
+                    registrationRows,
+                    error.detectedColumns
+                );
+
+                registrationData = normalizeRegistrationData(registrationText, {
+                    columnMapping: selectedMapping
+                });
+                setCachedRegistrationMapping(headerSignature, selectedMapping);
+            }
+
+            const { members: registeredMembers, duplicates: duplicateRegistrations } = registrationData;
 
             // Compute votes
-            const { result, validationIssues } = computeVotes(councilMembers, registeredMembers);
+            const { result, validationIssues, report } = computeVotes(councilMembers, registeredMembers);
 
             // Add duplicate registration warnings
             duplicateRegistrations.forEach(memberId => {
@@ -761,7 +1022,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Display results
             displayValidation(validationIssues);
-            displayResults(result);
+            displayResults(result, report);
             lastResults = result;
 
             processBtn.textContent = 'Process Votes';

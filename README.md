@@ -10,6 +10,13 @@ This application:
 3. **Computes vote assignments** based on club representation and leadership roles
 4. **Displays results** in an interactive HTML table
 5. **Exports to CSV** for further processing or record-keeping
+6. **Supports manual field mapping** when a registration CSV uses unfamiliar headers
+
+The results summary also reports:
+- Represented clubs
+- Assigned club votes
+- Assigned leadership votes
+- Quorum status (met/not met), where quorum is 1/3 of Member Clubs in good standing
 
 **Key Feature**: Entirely client-side. No backend, no server calls, no authentication needed. Safe to host on GitHub Pages.
 
@@ -98,6 +105,12 @@ If hosting on GitHub Pages:
 
 The parser also auto-detects equivalent labels that contain `correo/email`, `asist/attend`, and `socio/member` in case the form question text changes slightly.
 
+If auto-detection cannot identify required columns confidently, the app opens a **Map Registration CSV Columns** dialog so the user can map source columns to:
+- Member Number (required)
+- First Name, Last Name, Email, Attendance (optional)
+
+The selected mapping is cached for the same header format during the current browser session.
+
 **Notes**:
 - Members are considered registered if present in this list **and** `Will you be attending? = Yes` (case-insensitive)
 - Duplicate entries for same Member Number are deduplicated (last occurrence retained)
@@ -141,8 +154,11 @@ See [samples/README.md](samples/README.md) for detailed test scenarios.
 
 ✅ **Pure Client-Side**: No backend required; works completely in the browser  
 ✅ **Robust CSV Parsing**: Handles quoted fields, embedded commas, multiline values  
+✅ **Flexible Registration Mapping**: Auto-detects known headers and falls back to manual mapping for custom CSV formats  
 ✅ **Deterministic Output**: Same input always produces same output  
 ✅ **Comprehensive Validation**: Reports missing registrations, duplicate entries, unrepresented clubs  
+✅ **Governance Metrics**: Shows represented clubs, club/leadership vote totals, and quorum status  
+✅ **Brand-Aligned Styling**: Uses Toastmasters brand manual palette and gradient direction patterns  
 ✅ **Responsive Design**: Works on desktop, tablet, and mobile devices  
 ✅ **CSV Export**: Download results with timestamp (`toastmasters-votes-YYYYMMDD.csv`)  
 ✅ **Accessible**: Proper semantic HTML, ARIA labels, keyboard navigation  

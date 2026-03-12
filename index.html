@@ -37,6 +37,55 @@
                 <button id="process-btn" class="btn btn-primary">Process Votes</button>
             </section>
 
+            <section id="column-mapping-modal" class="mapping-modal hidden" aria-hidden="true">
+                <div class="mapping-dialog" role="dialog" aria-modal="true" aria-labelledby="mapping-title">
+                    <h2 id="mapping-title">Map Registration CSV Columns</h2>
+                    <p class="mapping-subtitle">We could not confidently detect all required fields. Select which CSV columns correspond to each output field.</p>
+
+                    <div id="mapping-errors" class="mapping-errors"></div>
+
+                    <form id="column-mapping-form" class="mapping-form">
+                        <div class="mapping-grid">
+                            <label for="map-memberId">Member Number (required)</label>
+                            <select id="map-memberId"></select>
+
+                            <label for="map-name">First Name</label>
+                            <select id="map-name"></select>
+
+                            <label for="map-lastName">Last Name</label>
+                            <select id="map-lastName"></select>
+
+                            <label for="map-email">Email</label>
+                            <select id="map-email"></select>
+
+                            <label for="map-attending">Attendance</label>
+                            <select id="map-attending"></select>
+                        </div>
+
+                        <h3>Preview (first 5 rows)</h3>
+                        <div class="mapping-preview-container">
+                            <table class="mapping-preview-table">
+                                <thead>
+                                    <tr>
+                                        <th>Member #</th>
+                                        <th>First Name</th>
+                                        <th>Last Name</th>
+                                        <th>Email</th>
+                                        <th>Attendance</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="mapping-preview-body"></tbody>
+                            </table>
+                        </div>
+
+                        <div class="mapping-actions">
+                            <button type="button" id="mapping-cancel-btn" class="btn btn-secondary">Cancel</button>
+                            <button type="submit" id="mapping-confirm-btn" class="btn btn-primary">Apply Mapping</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
             <!-- Validation & Error Section -->
             <section id="validation-section" class="validation-section hidden">
                 <h2>Validation Summary</h2>
@@ -69,6 +118,10 @@
                 <div class="stats-summary">
                     <p><strong>Total Members:</strong> <span id="total-members">0</span></p>
                     <p><strong>Total Votes Distributed:</strong> <span id="total-votes">0</span></p>
+                    <p><strong>Represented Clubs:</strong> <span id="represented-clubs">0</span></p>
+                    <p><strong>Assigned Club Votes:</strong> <span id="assigned-club-votes">0</span></p>
+                    <p><strong>Assigned Leadership Votes:</strong> <span id="assigned-leadership-votes">0</span></p>
+                    <p><strong>Quorum Met (1/3 of Member Clubs in good standing):</strong> <span id="quorum-status">No</span></p>
                 </div>
             </section>
 

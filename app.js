@@ -27,10 +27,13 @@ const MAX_VOTES_PER_MEMBER = 3;
 // ============================================================================
 
 /**
- * Parse CSV text into rows (handles quoted fields, embedded commas/newlines)
+ * Parse CSV text into an array of field arrays.
+ * Handles quoted fields (which may contain commas and newlines), escaped
+ * double-quotes (""), and both \r\n and \n line endings.
  */
 function parseCSV(text) {
     const rows = [];
+    let fields = [];
     let current = '';
     let inQuotes = false;
 
@@ -39,60 +42,37 @@ function parseCSV(text) {
 
         if (char === '"') {
             if (inQuotes && text[i + 1] === '"') {
-                // Escaped quote
+                // Escaped double-quote inside a quoted field
                 current += '"';
                 i++;
             } else {
-                // Toggle quote mode
-                inQuotes = !inQuotes;
-            }
-        } else if (char === '\n' && !inQuotes) {
-            // End of row
-            if (current.trim()) {
-                rows.push(parseCSVRow(current));
-            }
-            current = '';
-        } else {
-            current += char;
-        }
-    }
-
-    // Final row
-    if (current.trim()) {
-        rows.push(parseCSVRow(current));
-    }
-
-    return rows;
-}
-
-/**
- * Parse a single CSV row by comma boundaries, respecting quoted fields
- */
-function parseCSVRow(rowText) {
-    const fields = [];
-    let current = '';
-    let inQuotes = false;
-
-    for (let i = 0; i < rowText.length; i++) {
-        const char = rowText[i];
-
-        if (char === '"') {
-            if (inQuotes && rowText[i + 1] === '"') {
-                current += '"';
-                i++;
-            } else {
+                // Start or end of a quoted field
                 inQuotes = !inQuotes;
             }
         } else if (char === ',' && !inQuotes) {
-            fields.push(current.trim().replace(/^"|"$/g, ''));
+            fields.push(current.trim());
+            current = '';
+        } else if ((char === '\n' || char === '\r') && !inQuotes) {
+            // Handle \r\n as a single newline
+            if (char === '\r' && text[i + 1] === '\n') i++;
+            fields.push(current.trim());
+            if (fields.some(f => f !== '')) {
+                rows.push(fields);
+            }
+            fields = [];
             current = '';
         } else {
             current += char;
         }
     }
 
-    fields.push(current.trim().replace(/^"|"$/g, ''));
-    return fields;
+    // Final field / row
+    fields.push(current.trim());
+    if (fields.some(f => f !== '')) {
+        rows.push(fields);
+    }
+
+    return rows;
 }
 
 /**

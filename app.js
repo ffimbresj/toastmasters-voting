@@ -189,17 +189,6 @@ function normalizeRegistrationData(csvText) {
     }
 
     const headerRow = rows[0];
-    const columnMap = {};
-    headerRow.forEach((col, idx) => {
-        columnMap[col.toLowerCase().trim()] = idx;
-    });
-
-    const firstDefined = (...keys) => {
-        for (const key of keys) {
-            if (columnMap[key] !== undefined) return columnMap[key];
-        }
-        return undefined;
-    };
 
     const normalizeText = (value) =>
         (value || '')
@@ -207,6 +196,30 @@ function normalizeRegistrationData(csvText) {
             .normalize('NFD')
             .replace(/[\u0300-\u036f]/g, '')
             .trim();
+
+    const normalizedHeaders = headerRow.map((col) => normalizeText(col));
+    const columnMap = {};
+    normalizedHeaders.forEach((col, idx) => {
+        columnMap[col] = idx;
+    });
+
+    const firstDefined = (...keys) => {
+        for (const key of keys) {
+            const normKey = normalizeText(key);
+            if (columnMap[normKey] !== undefined) return columnMap[normKey];
+        }
+        return undefined;
+    };
+
+    const findByKeyword = (...keywords) => {
+        for (let i = 0; i < normalizedHeaders.length; i++) {
+            const h = normalizedHeaders[i];
+            if (keywords.some((k) => h.includes(normalizeText(k)))) {
+                return i;
+            }
+        }
+        return undefined;
+    };
 
     // Map expected columns
     const cols = {
@@ -217,8 +230,52 @@ function normalizeRegistrationData(csvText) {
         attending: firstDefined('will you be attending?', '¿asistiras a la reunion?', '¿asistirás a la reunión?', 'asistiras a la reunion?', 'asistirás a la reunión?')
     };
 
+    // Fallback detection for slightly different form labels.
+    if (cols.memberId === undefined) cols.memberId = findByKeyword('member number', 'numero de socio', 'número de socio', 'socio');
+    if (cols.name === undefined) cols.name = findByKeyword('name', 'nombre');
+    if (cols.lastName === undefined) cols.lastName = findByKeyword('last name', 'apellido');
+    if (cols.email === undefined) cols.email = findByKeyword('email', 'correo');
+    if (cols.attending === undefined) cols.attending = findByKeyword('attend', 'asist');
+
     if (cols.memberId === undefined) {
         throw new Error('Missing required column: Member Number / Numero de socio');
+    }
+
+    // Auto-correct swapped email/attendance columns using row-value heuristics.
+    const detectEmailLike = (value) => (value || '').includes('@');
+    const detectAttendanceLike = (value) => {
+        const t = normalizeText(value || '');
+        return t.startsWith('si') || t.startsWith('no') || t.includes('attend');
+    };
+
+    const sampleRows = rows.slice(1, 31);
+    const scoreColumn = (colIdx, predicate) => {
+        if (colIdx === undefined) return 0;
+        let hits = 0;
+        let total = 0;
+        sampleRows.forEach((r) => {
+            if (colIdx < r.length && (r[colIdx] || '').trim()) {
+                total += 1;
+                if (predicate(r[colIdx])) hits += 1;
+            }
+        });
+        return total === 0 ? 0 : hits / total;
+    };
+
+    const emailScoreAtEmail = scoreColumn(cols.email, detectEmailLike);
+    const emailScoreAtAttending = scoreColumn(cols.attending, detectEmailLike);
+    const attendanceScoreAtAttending = scoreColumn(cols.attending, detectAttendanceLike);
+
+    if (
+        cols.email !== undefined &&
+        cols.attending !== undefined &&
+        emailScoreAtEmail < 0.4 &&
+        emailScoreAtAttending > 0.7 &&
+        attendanceScoreAtAttending < 0.4
+    ) {
+        const tmp = cols.email;
+        cols.email = cols.attending;
+        cols.attending = tmp;
     }
 
     const memberMap = new Map();
@@ -229,7 +286,7 @@ function normalizeRegistrationData(csvText) {
         const row = rows[i];
         if (row.length === 1 && !row[0].trim()) continue; // Skip empty rows
 
-        const memberId = (row[cols.memberId] || '').trim();
+        const memberId = (row[cols.memberId] || '').trim().replace(/^0+(?=\d)/, '');  // strip leading zeros
         if (!memberId) continue;
 
         // Track duplicates; last occurrence wins
@@ -263,7 +320,7 @@ function normalizeRegistrationData(csvText) {
  */
 function normalizeMemberRecord(raw) {
     return {
-        memberId: (raw.memberId || '').trim(),
+        memberId: (raw.memberId || '').trim().replace(/^0+(?=\d)/, ''),  // strip leading zeros
         firstName: (raw.firstName || '').trim(),
         lastName: (raw.lastName || '').trim(),
         email: (raw.email || '').trim(),

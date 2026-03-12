@@ -96,6 +96,8 @@ If hosting on GitHub Pages:
 - `Proporciona correctamente tu correo electrónico`
 - `¿Asistirás a la reunión?` (for example: `Sí, asistiré en persona`, `Sí, asistiré de manera remota`, `No asistiré`)
 
+The parser also auto-detects equivalent labels that contain `correo/email`, `asist/attend`, and `socio/member` in case the form question text changes slightly.
+
 **Notes**:
 - Members are considered registered if present in this list **and** `Will you be attending? = Yes` (case-insensitive)
 - Duplicate entries for same Member Number are deduplicated (last occurrence retained)

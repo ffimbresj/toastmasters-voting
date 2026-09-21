@@ -121,10 +121,10 @@ If a member appears multiple times in the Registration List with the same Member
 ## Output Format
 
 **Rule 5.1: Output Columns (in order)**
-1. `Member Name` (concatenation of `First Name` and `Last Name`)
-2. `Member Number`
+1. `ID` (Member Number)
+2. `Label` (concatenation of `First Name` and `Last Name`)
 3. `Email`
-4. `Votes Available` (total computed votes, 0–3)
+4. `Weight` (total computed votes, 0–3)
 
 **Rule 5.2: Output Eligibility**
 - Only output members who appear in **both** the Council Member List and the Registration List with `Will you be attending? = YES`, and who receive at least **1 assigned vote** after all club/leadership calculations and redistribution.

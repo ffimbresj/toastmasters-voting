@@ -1344,10 +1344,10 @@ function downloadAsCSV(results) {
     const timestamp = new Date().toISOString().split('T')[0].replace(/-/g, '');
     const filename = `toastmasters-votes-${timestamp}.csv`;
 
-    const header = ['Member Name', 'Member Number', 'Email', 'Votes Available'];
+    const header = ['ID', 'Label', 'Email', 'Weight'];
     const rows = results.map(m => [
-        `"${m.memberName.replace(/"/g, '""')}"`,
         m.memberId,
+        `"${m.memberName.replace(/"/g, '""')}"`,
         `"${m.email.replace(/"/g, '""')}"`,
         m.votes
     ]);

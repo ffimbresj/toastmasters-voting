@@ -53,6 +53,17 @@ const I18N = {
         mappingErrorMemberRequired: 'Member Number is required.',
         mappingErrorColumnsReused: 'Columns cannot be reused: {fieldA} and {fieldB} use the same source column.',
         validationTitle: 'Validation Summary',
+        clubRepresentationTitle: 'Club Representation',
+        clubRepresentationSummary: '{represented} of {total} clubs have a registered voting representative',
+        divisionHeading: 'Division {division}',
+        divisionUnlabeled: 'Unassigned',
+        areaHeading: 'Area {area}',
+        tableClubName: 'Club Name',
+        tableRepresentationStatus: 'Status',
+        representedYes: 'Represented',
+        representedNo: 'Not Represented',
+        roleAbbrevPresident: 'P',
+        roleAbbrevVpe: 'VPE',
         resultsTitle: 'Voting Results',
         downloadCsv: '⬇ Download as CSV',
         tableMemberName: 'Member Name',
@@ -116,6 +127,17 @@ const I18N = {
         mappingErrorMemberRequired: 'El número de socio es obligatorio.',
         mappingErrorColumnsReused: 'No se pueden reutilizar columnas: {fieldA} y {fieldB} usan la misma columna de origen.',
         validationTitle: 'Resumen de validación',
+        clubRepresentationTitle: 'Representación de clubes',
+        clubRepresentationSummary: '{represented} de {total} clubes tienen un representante registrado con voto',
+        divisionHeading: 'División {division}',
+        divisionUnlabeled: 'Sin asignar',
+        areaHeading: 'Área {area}',
+        tableClubName: 'Nombre del club',
+        tableRepresentationStatus: 'Estado',
+        representedYes: 'Representado',
+        representedNo: 'Sin representación',
+        roleAbbrevPresident: 'P',
+        roleAbbrevVpe: 'VPE',
         resultsTitle: 'Resultados de votación',
         downloadCsv: '⬇ Descargar CSV',
         tableMemberName: 'Nombre del socio',
@@ -193,6 +215,9 @@ function setLanguage(lang) {
     }
     if (appState.lastResults) {
         displayResults(appState.lastResults, appState.lastReport);
+    }
+    if (appState.lastReport) {
+        renderClubRepresentation(appState.lastReport);
     }
 }
 
@@ -455,7 +480,9 @@ function normalizeCouncilData(csvText) {
         clubName: columnMap['club name'],
         clubStatus: columnMap['club status'],
         positionDescription: columnMap['position description'],
-        isPaid: columnMap['is paid']
+        isPaid: columnMap['is paid'],
+        division: columnMap['division'],
+        area: columnMap['area']
     };
 
     if (cols.memberId === undefined || cols.positionDescription === undefined) {
@@ -482,7 +509,9 @@ function normalizeCouncilData(csvText) {
             clubName: row[cols.clubName],
             clubStatus: row[cols.clubStatus],
             positionDescription: row[cols.positionDescription],
-            isPaid: row[cols.isPaid]
+            isPaid: row[cols.isPaid],
+            division: row[cols.division],
+            area: row[cols.area]
         });
 
         if (member) {
@@ -613,7 +642,9 @@ function normalizeMemberRecord(raw) {
         clubName: (raw.clubName || '').trim(),
         clubStatus: (raw.clubStatus || '').trim(),
         positionDescription: (raw.positionDescription || '').trim(),
-        isPaid: (raw.isPaid || '').trim()
+        isPaid: (raw.isPaid || '').trim(),
+        division: (raw.division || '').trim(),
+        area: (raw.area || '').trim()
     };
 }
 
@@ -652,6 +683,21 @@ function computeVotes(councilMembers, registeredMembers) {
             .filter(m => m.clubStatus === 'Complete' && m.clubId)
             .map(m => m.clubId)
     );
+
+    // Club directory (division/area/name) for every club seen, regardless of status
+    const clubDirectory = {}; // clubId -> { clubId, clubName, division, area, status }
+    councilMembers.forEach(member => {
+        if (!member.clubId) return;
+        if (!clubDirectory[member.clubId]) {
+            clubDirectory[member.clubId] = {
+                clubId: member.clubId,
+                clubName: member.clubName,
+                division: member.division,
+                area: member.area,
+                status: member.clubStatus
+            };
+        }
+    });
 
     paidCouncilMembers.forEach(member => {
         if (member.clubStatus !== 'Complete') return;
@@ -768,11 +814,26 @@ function computeVotes(councilMembers, registeredMembers) {
     const representedClubs = new Set();
     let assignedClubVotes = 0;
     let assignedLeadershipVotes = 0;
+    const clubRepresentatives = {}; // clubId -> [{ memberId, votes, role }]
 
-    Object.values(memberVotes).forEach(vd => {
+    Object.entries(memberVotes).forEach(([memberId, vd]) => {
         vd.clubVotes.forEach(cv => {
             representedClubs.add(cv.clubId);
             assignedClubVotes += cv.votes;
+
+            if (!clubRepresentatives[cv.clubId]) clubRepresentatives[cv.clubId] = [];
+            const roles = councilById[memberId] || [];
+            const roleMatch = roles.find(
+                r => r.clubId === cv.clubId &&
+                    (r.positionDescription === 'Club President' || r.positionDescription === 'Club VP Education')
+            );
+            const memberInfo = roles[0] || {};
+            clubRepresentatives[cv.clubId].push({
+                memberId,
+                votes: cv.votes,
+                role: roleMatch ? roleMatch.positionDescription : null,
+                name: [memberInfo.firstName, memberInfo.lastName].filter(Boolean).join(' ').trim()
+            });
         });
         assignedLeadershipVotes += vd.leadershipVotes || 0;
     });
@@ -780,13 +841,27 @@ function computeVotes(councilMembers, registeredMembers) {
     const quorumRequired = Math.ceil(goodStandingClubIds.size / 3);
     const quorumMet = representedClubs.size >= quorumRequired;
 
+    // Club representation, organized by Division then Area, for good-standing clubs
+    const clubRepresentation = Array.from(goodStandingClubIds).map(clubId => {
+        const info = clubDirectory[clubId] || {};
+        return {
+            clubId,
+            clubName: info.clubName || clubId,
+            division: info.division || '',
+            area: info.area || '',
+            represented: representedClubs.has(clubId),
+            representatives: clubRepresentatives[clubId] || []
+        };
+    });
+
     const report = {
         representedClubs: representedClubs.size,
         assignedClubVotes,
         assignedLeadershipVotes,
         goodStandingClubCount: goodStandingClubIds.size,
         quorumRequired,
-        quorumMet
+        quorumMet,
+        clubRepresentation
     };
 
     return { result, validationIssues, report };
@@ -944,7 +1019,10 @@ function displayValidation(issues) {
     const section = document.getElementById('validation-section');
     const container = document.getElementById('validation-messages');
 
-    if (issues.length === 0) {
+    // Unrepresented-club warnings are shown in the Club Representation table instead of this list.
+    const listedIssues = issues.filter(issue => issue.type !== 'unrepresentedClub');
+
+    if (listedIssues.length === 0) {
         section.classList.add('hidden');
         return;
     }
@@ -956,10 +1034,10 @@ function displayValidation(issues) {
         info: []
     };
 
-    issues.forEach(issue => {
+    listedIssues.forEach(issue => {
         const message = issue.message || t(issue.messageKey, issue.params || {});
         const severity = issue.type === 'missingCouncil' ? 'error' :
-            (issue.type === 'unrepresentedClub' || issue.type === 'duplicateRegistration' ? 'warning' : 'info');
+            (issue.type === 'duplicateRegistration' ? 'warning' : 'info');
         issueGroups[severity].push(message);
     });
 
@@ -1133,6 +1211,118 @@ function displayResults(results, report) {
 }
 
 /**
+ * Render club representation, grouped by Division then Area, showing which
+ * good-standing clubs have a registered voting representative and which don't.
+ */
+function renderClubRepresentation(report) {
+    const section = document.getElementById('club-representation-section');
+    const container = document.getElementById('club-representation-container');
+    const summary = document.getElementById('club-representation-summary');
+    if (!section || !container) return;
+
+    const clubs = (report && report.clubRepresentation) || [];
+    if (clubs.length === 0) {
+        section.classList.add('hidden');
+        return;
+    }
+
+    container.innerHTML = '';
+
+    const unlabeled = t('divisionUnlabeled');
+
+    // Group clubs by division, then by area, within each division
+    const divisions = new Map();
+    clubs.forEach(club => {
+        const divKey = club.division || unlabeled;
+        const areaKey = club.area || unlabeled;
+        if (!divisions.has(divKey)) divisions.set(divKey, new Map());
+        const areas = divisions.get(divKey);
+        if (!areas.has(areaKey)) areas.set(areaKey, []);
+        areas.get(areaKey).push(club);
+    });
+
+    const representedCount = clubs.filter(c => c.represented).length;
+    if (summary) {
+        summary.textContent = t('clubRepresentationSummary', {
+            represented: representedCount,
+            total: clubs.length
+        });
+    }
+
+    Array.from(divisions.keys()).sort().forEach(divKey => {
+        const divisionWrap = document.createElement('div');
+        divisionWrap.className = 'division-group';
+
+        const divisionHeading = document.createElement('h3');
+        divisionHeading.className = 'division-heading';
+        divisionHeading.textContent = t('divisionHeading', { division: divKey });
+        divisionWrap.appendChild(divisionHeading);
+
+        const areaGrid = document.createElement('div');
+        areaGrid.className = 'area-grid';
+
+        const areas = divisions.get(divKey);
+        Array.from(areas.keys()).sort().forEach(areaKey => {
+            const areaWrap = document.createElement('div');
+            areaWrap.className = 'area-group';
+
+            const areaHeading = document.createElement('h4');
+            areaHeading.className = 'area-heading';
+            areaHeading.textContent = t('areaHeading', { area: areaKey });
+            areaWrap.appendChild(areaHeading);
+
+            const tableContainer = document.createElement('div');
+            tableContainer.className = 'table-container';
+
+            const table = document.createElement('table');
+            table.className = 'club-representation-table';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>${escapeHtml(t('tableClubName'))}</th>
+                        <th>${escapeHtml(t('tableRepresentationStatus'))}</th>
+                    </tr>
+                </thead>
+            `;
+
+            const tbody = document.createElement('tbody');
+            areas.get(areaKey)
+                .slice()
+                .sort((a, b) => a.clubName.localeCompare(b.clubName))
+                .forEach(club => {
+                    const tr = document.createElement('tr');
+                    tr.className = club.represented ? 'club-represented' : 'club-unrepresented';
+
+                    const roleAbbrevs = [];
+                    if (club.representatives.some(r => r.role === 'Club President')) roleAbbrevs.push(t('roleAbbrevPresident'));
+                    if (club.representatives.some(r => r.role === 'Club VP Education')) roleAbbrevs.push(t('roleAbbrevVpe'));
+
+                    const statusLabel = club.represented
+                        ? `✅ ${roleAbbrevs.join(', ') || t('representedYes')}`
+                        : '❌';
+                    const statusTitle = club.represented ? '' : ` title="${escapeHtml(t('representedNo'))}"`;
+
+                    tr.innerHTML = `
+                        <td>${escapeHtml(club.clubName)}</td>
+                        <td class="representation-status"${statusTitle}>${statusLabel}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+            table.appendChild(tbody);
+            tableContainer.appendChild(table);
+            areaWrap.appendChild(tableContainer);
+            areaGrid.appendChild(areaWrap);
+        });
+
+        divisionWrap.appendChild(areaGrid);
+        container.appendChild(divisionWrap);
+    });
+
+    section.classList.remove('hidden');
+}
+
+/**
  * Safely escape HTML characters
  */
 function escapeHtml(text) {
@@ -1270,6 +1460,7 @@ document.addEventListener('DOMContentLoaded', () => {
             appState.lastReport = report;
             displayValidation(validationIssues);
             displayResults(result, report);
+            renderClubRepresentation(report);
 
             processBtn.textContent = t('processVotes');
         } catch (error) {
@@ -1277,6 +1468,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert(t('alertProcessError', { message: error.message }));
             document.getElementById('validation-section').classList.add('hidden');
             document.getElementById('results-section').classList.add('hidden');
+            document.getElementById('club-representation-section').classList.add('hidden');
             appState.lastValidationIssues = [];
             appState.lastResults = null;
             appState.lastReport = null;

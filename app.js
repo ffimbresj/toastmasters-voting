@@ -801,6 +801,7 @@ function computeVotes(councilMembers, registeredMembers) {
 
         result.push({
             memberName: [regMember.name, regMember.lastName].filter(Boolean).join(' ').trim(),
+            firstName: (regMember.name || '').trim(),
             memberId: regMember.memberId,
             email: regMember.email,
             votes
@@ -1347,7 +1348,7 @@ function downloadAsCSV(results) {
     const header = ['ID', 'Label', 'Email', 'Weight'];
     const rows = results.map(m => [
         m.memberId,
-        `"${m.memberName.replace(/"/g, '""')}"`,
+        `"${m.firstName.replace(/"/g, '""')}"`,
         `"${m.email.replace(/"/g, '""')}"`,
         m.votes
     ]);

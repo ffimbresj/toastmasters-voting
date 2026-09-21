@@ -122,7 +122,7 @@ If a member appears multiple times in the Registration List with the same Member
 
 **Rule 5.1: Output Columns (in order)**
 1. `ID` (Member Number)
-2. `Label` (`First Name` only, no `Last Name`)
+2. `Label` (concatenation of `First Name` and `Last Name`)
 3. `Email`
 4. `Weight` (total computed votes, 0–3)
 

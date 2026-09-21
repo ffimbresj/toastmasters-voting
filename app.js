@@ -64,6 +64,14 @@ const I18N = {
         representedNo: 'Not Represented',
         roleAbbrevPresident: 'P',
         roleAbbrevVpe: 'VPE',
+        leadershipTitle: 'District Leadership',
+        leadershipSummary: '{registered} of {total} leadership positions registered',
+        tablePosition: 'Position',
+        tableLeaderName: 'Name',
+        tableDivision: 'Division',
+        tableArea: 'Area',
+        leaderRegisteredYes: 'Registered',
+        leaderRegisteredNo: 'Not Registered',
         resultsTitle: 'Voting Results',
         downloadCsv: '⬇ Download as CSV',
         tableMemberName: 'Member Name',
@@ -138,6 +146,14 @@ const I18N = {
         representedNo: 'Sin representación',
         roleAbbrevPresident: 'P',
         roleAbbrevVpe: 'VPE',
+        leadershipTitle: 'Liderazgo del Distrito',
+        leadershipSummary: '{registered} de {total} posiciones de liderazgo registradas',
+        tablePosition: 'Posición',
+        tableLeaderName: 'Nombre',
+        tableDivision: 'División',
+        tableArea: 'Área',
+        leaderRegisteredYes: 'Registrado',
+        leaderRegisteredNo: 'No registrado',
         resultsTitle: 'Resultados de votación',
         downloadCsv: '⬇ Descargar CSV',
         tableMemberName: 'Nombre del socio',
@@ -218,6 +234,7 @@ function setLanguage(lang) {
     }
     if (appState.lastReport) {
         renderClubRepresentation(appState.lastReport);
+        renderLeadershipTable(appState.lastReport);
     }
 }
 
@@ -854,6 +871,19 @@ function computeVotes(councilMembers, registeredMembers) {
         };
     });
 
+    // Leadership positions (Area/Division Directors, District officers, etc.), regardless
+    // of whether the same member also holds a club officer (President/VP Education) role.
+    const leadershipPositions = paidCouncilMembers
+        .filter(member => LEADERSHIP_VOTE_ROLES.some(role => member.positionDescription.includes(role)))
+        .map(member => ({
+            role: member.positionDescription,
+            memberId: member.memberId,
+            name: [member.firstName, member.lastName].filter(Boolean).join(' ').trim(),
+            division: member.division || '',
+            area: member.area || '',
+            registered: registered.has(member.memberId)
+        }));
+
     const report = {
         representedClubs: representedClubs.size,
         assignedClubVotes,
@@ -861,7 +891,8 @@ function computeVotes(councilMembers, registeredMembers) {
         goodStandingClubCount: goodStandingClubIds.size,
         quorumRequired,
         quorumMet,
-        clubRepresentation
+        clubRepresentation,
+        leadershipPositions
     };
 
     return { result, validationIssues, report };
@@ -1323,6 +1354,87 @@ function renderClubRepresentation(report) {
 }
 
 /**
+ * Render the District Leadership table: every council member holding a
+ * leadership role (Area/Division Director, District officers, etc.) and
+ * whether they are registered. Members who also hold a club officer role
+ * (President/VP Education) are still included here.
+ */
+function renderLeadershipTable(report) {
+    const section = document.getElementById('leadership-section');
+    const container = document.getElementById('leadership-container');
+    const summary = document.getElementById('leadership-summary');
+    if (!section || !container) return;
+
+    const positions = (report && report.leadershipPositions) || [];
+    if (positions.length === 0) {
+        section.classList.add('hidden');
+        return;
+    }
+
+    container.innerHTML = '';
+
+    const registeredCount = positions.filter(p => p.registered).length;
+    if (summary) {
+        summary.textContent = t('leadershipSummary', {
+            registered: registeredCount,
+            total: positions.length
+        });
+    }
+
+    const dash = '—';
+    const sorted = positions.slice().sort((a, b) => {
+        const roleDiff = LEADERSHIP_VOTE_ROLES.indexOf(a.role) - LEADERSHIP_VOTE_ROLES.indexOf(b.role);
+        if (roleDiff !== 0) return roleDiff;
+        const divDiff = (a.division || '').localeCompare(b.division || '');
+        if (divDiff !== 0) return divDiff;
+        const areaDiff = (a.area || '').localeCompare(b.area || '');
+        if (areaDiff !== 0) return areaDiff;
+        return (a.name || '').localeCompare(b.name || '');
+    });
+
+    const tableContainer = document.createElement('div');
+    tableContainer.className = 'table-container';
+
+    const table = document.createElement('table');
+    table.className = 'club-representation-table';
+    table.innerHTML = `
+        <thead>
+            <tr>
+                <th>${escapeHtml(t('tablePosition'))}</th>
+                <th>${escapeHtml(t('tableLeaderName'))}</th>
+                <th>${escapeHtml(t('tableDivision'))}</th>
+                <th>${escapeHtml(t('tableArea'))}</th>
+                <th>${escapeHtml(t('tableRepresentationStatus'))}</th>
+            </tr>
+        </thead>
+    `;
+
+    const tbody = document.createElement('tbody');
+    sorted.forEach(pos => {
+        const tr = document.createElement('tr');
+        tr.className = pos.registered ? 'club-represented' : 'club-unrepresented';
+
+        const statusLabel = pos.registered ? `✅ ${t('leaderRegisteredYes')}` : '❌';
+        const statusTitle = pos.registered ? '' : ` title="${escapeHtml(t('leaderRegisteredNo'))}"`;
+
+        tr.innerHTML = `
+            <td>${escapeHtml(pos.role)}</td>
+            <td>${escapeHtml(pos.name || pos.memberId)}</td>
+            <td>${escapeHtml(pos.division || dash)}</td>
+            <td>${escapeHtml(pos.area || dash)}</td>
+            <td class="representation-status"${statusTitle}>${statusLabel}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+    tableContainer.appendChild(table);
+    container.appendChild(tableContainer);
+
+    section.classList.remove('hidden');
+}
+
+/**
  * Safely escape HTML characters
  */
 function escapeHtml(text) {
@@ -1461,6 +1573,7 @@ document.addEventListener('DOMContentLoaded', () => {
             displayValidation(validationIssues);
             displayResults(result, report);
             renderClubRepresentation(report);
+            renderLeadershipTable(report);
 
             processBtn.textContent = t('processVotes');
         } catch (error) {
@@ -1469,6 +1582,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('validation-section').classList.add('hidden');
             document.getElementById('results-section').classList.add('hidden');
             document.getElementById('club-representation-section').classList.add('hidden');
+            document.getElementById('leadership-section').classList.add('hidden');
             appState.lastValidationIssues = [];
             appState.lastResults = null;
             appState.lastReport = null;

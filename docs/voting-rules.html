@@ -46,6 +46,32 @@
         padding: 40px 45px;
     }
 
+    .language-switcher {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    .language-switcher label {
+        font-size: 0.9rem;
+        font-weight: 700;
+    }
+
+    .language-switcher select {
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        background: rgba(255, 255, 255, 0.14);
+        color: var(--tm-white);
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 0.9rem;
+    }
+
+    .language-switcher option {
+        color: var(--tm-charcoal);
+    }
+
     header .back-link {
         display: inline-block;
         margin-bottom: 18px;
@@ -221,6 +247,8 @@
         background: var(--tm-fair-gray);
     }
 
+    .lang-content[hidden] { display: none; }
+
     @media (max-width: 640px) {
         body { padding: 0; }
         .sheet { border-radius: 0; }
@@ -231,7 +259,7 @@
     @media print {
         body { background: var(--tm-white); padding: 0; }
         .sheet { box-shadow: none; border-radius: 0; max-width: 100%; }
-        header .back-link { display: none; }
+        .language-switcher, header .back-link { display: none; }
         nav.toc { page-break-after: always; }
         section.rule { page-break-inside: avoid; }
         section.rule.page-break { page-break-before: always; border-top: none; margin-top: 0; padding-top: 0; }
@@ -241,201 +269,453 @@
 <body>
 <div class="sheet">
     <header>
-        <a class="back-link" href="../index.html">&larr; Back to Voting App</a>
-        <h1>Toastmasters Council Voting Rules</h1>
-        <p class="meta">Version 1.2 &middot; Effective September 21, 2026 &middot; District 0113</p>
+        <div class="language-switcher">
+            <label for="language-select" id="langLabel">Language</label>
+            <select id="language-select" aria-label="Language selector">
+                <option value="en">English</option>
+                <option value="es">Español</option>
+            </select>
+        </div>
+        <a class="back-link" href="../index.html" id="backLink">&larr; Back to Voting App</a>
+        <h1 id="pageTitle">Toastmasters Council Voting Rules</h1>
+        <p class="meta" id="pageMeta">Version 1.2 &middot; Effective September 21, 2026 &middot; District 0113</p>
     </header>
 
-    <nav class="toc" aria-label="Table of contents">
-        <h2>On this page</h2>
-        <ol>
-            <li><a href="#overview">Overview</a></li>
-            <li><a href="#eligibility">Eligibility</a></li>
-            <li><a href="#club-votes">Club Votes</a></li>
-            <li><a href="#leadership-votes">Leadership Votes</a></li>
-            <li><a href="#vote-cap">Vote Cap</a></li>
-            <li><a href="#redistribution">Overflow Redistribution</a></li>
-            <li><a href="#deduplication">Registration Deduplication</a></li>
-            <li><a href="#quorum">Quorum</a></li>
-        </ol>
-    </nav>
+    <!-- ============================= ENGLISH ============================= -->
+    <div class="lang-content" id="content-en">
+        <nav class="toc" aria-label="Table of contents">
+            <h2>On this page</h2>
+            <ol>
+                <li><a href="#overview-en">Overview</a></li>
+                <li><a href="#eligibility-en">Eligibility</a></li>
+                <li><a href="#club-votes-en">Club Votes</a></li>
+                <li><a href="#leadership-votes-en">Leadership Votes</a></li>
+                <li><a href="#vote-cap-en">Vote Cap</a></li>
+                <li><a href="#redistribution-en">Overflow Redistribution</a></li>
+                <li><a href="#deduplication-en">Registration Deduplication</a></li>
+                <li><a href="#quorum-en">Quorum</a></li>
+            </ol>
+        </nav>
 
-    <main>
-        <section class="rule" id="overview">
-            <h2>Overview</h2>
-            <p>These rules establish how voting power is assigned to registered Council members based on the official Council Member List and Registration List.</p>
-        </section>
+        <main>
+            <section class="rule" id="overview-en">
+                <h2>Overview</h2>
+                <p>These rules establish how voting power is assigned to registered Council members based on the official Council Member List and Registration List.</p>
+            </section>
 
-        <section class="rule" id="eligibility">
-            <h2><span class="rule-number">0</span>Eligibility</h2>
-            <div class="clause">
-                <h3>Paid Member Requirement</h3>
-                <ul>
-                    <li>Only members whose <code>Is Paid</code> field in the Council Member List equals <strong>Paid Member</strong> are eligible to vote.</li>
-                    <li>Members who appear in the Registration List but are not paid council members are excluded from all vote calculations and from the output.</li>
-                </ul>
-            </div>
-        </section>
+            <section class="rule" id="eligibility-en">
+                <h2><span class="rule-number">0</span>Eligibility</h2>
+                <div class="clause">
+                    <h3>Paid Member Requirement</h3>
+                    <ul>
+                        <li>Only members whose <code>Is Paid</code> field in the Council Member List equals <strong>Paid Member</strong> are eligible to vote.</li>
+                        <li>Members who appear in the Registration List but are not paid council members are excluded from all vote calculations and from the output.</li>
+                    </ul>
+                </div>
+            </section>
 
-        <section class="rule" id="club-votes">
-            <h2><span class="rule-number">1</span>Club Votes</h2>
-            <div class="clause">
-                <h3>Club Eligibility</h3>
-                <ul>
-                    <li>Only members from clubs with <code>Club Status = Complete</code> are eligible to receive club votes.</li>
-                    <li>Each club contributes exactly <strong>2 votes</strong> to be distributed among its registered representatives.</li>
-                </ul>
-            </div>
-            <div class="clause">
-                <h3>Club Officer Positions</h3>
-                <p>Only the following positions are considered for club vote distribution:</p>
-                <ul>
-                    <li><code>Club President</code></li>
-                    <li><code>Club VP Education</code></li>
-                </ul>
-            </div>
-            <div class="clause">
-                <h3>Club Vote Distribution</h3>
-                <table class="rule-table">
-                    <thead>
-                        <tr><th>Scenario</th><th>President Registered</th><th>VP Education Registered</th><th>Result</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>Both</td><td>✓</td><td>✓</td><td>President gets 1 vote, VPE gets 1 vote</td></tr>
-                        <tr><td>Only President</td><td>✓</td><td>✗</td><td>President gets 2 votes</td></tr>
-                        <tr><td>Only VPE</td><td>✗</td><td>✓</td><td>VPE gets 2 votes</td></tr>
-                        <tr><td>Neither</td><td>✗</td><td>✗</td><td><strong>No club votes assigned</strong> (club unrepresented)</td></tr>
-                    </tbody>
-                </table>
-                <p>A member is considered "registered" if they appear in the Registration List with <code>Will you be attending?</code> = YES.</p>
-            </div>
-        </section>
+            <section class="rule" id="club-votes-en">
+                <h2><span class="rule-number">1</span>Club Votes</h2>
+                <div class="clause">
+                    <h3>Club Eligibility</h3>
+                    <ul>
+                        <li>Only members from clubs with <code>Club Status = Complete</code> are eligible to receive club votes.</li>
+                        <li>Each club contributes exactly <strong>2 votes</strong> to be distributed among its registered representatives.</li>
+                    </ul>
+                </div>
+                <div class="clause">
+                    <h3>Club Officer Positions</h3>
+                    <p>Only the following positions are considered for club vote distribution:</p>
+                    <ul>
+                        <li><code>Club President</code></li>
+                        <li><code>Club VP Education</code></li>
+                    </ul>
+                </div>
+                <div class="clause">
+                    <h3>Club Vote Distribution</h3>
+                    <table class="rule-table">
+                        <thead>
+                            <tr><th>Scenario</th><th>President Registered</th><th>VP Education Registered</th><th>Result</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Both</td><td>✓</td><td>✓</td><td>President gets 1 vote, VPE gets 1 vote</td></tr>
+                            <tr><td>Only President</td><td>✓</td><td>✗</td><td>President gets 2 votes</td></tr>
+                            <tr><td>Only VPE</td><td>✗</td><td>✓</td><td>VPE gets 2 votes</td></tr>
+                            <tr><td>Neither</td><td>✗</td><td>✗</td><td><strong>No club votes assigned</strong> (club unrepresented)</td></tr>
+                        </tbody>
+                    </table>
+                    <p>A member is considered "registered" if they appear in the Registration List with <code>Will you be attending?</code> = YES.</p>
+                </div>
+            </section>
 
-        <section class="rule" id="leadership-votes">
-            <h2><span class="rule-number">2</span>Leadership Votes</h2>
-            <div class="clause">
-                <h3>Eligible Leadership Roles</h3>
-                <p>Registered paid members holding one of the following positions receive an additional <strong>leadership vote</strong>:</p>
-                <ul>
-                    <li><code>Area Director</code></li>
-                    <li><code>Division Director</code></li>
-                    <li><code>Administration Manager</code></li>
-                    <li><code>Finance Manager</code></li>
-                    <li><code>Public Relations Manager</code></li>
-                    <li><code>Club Growth Director</code></li>
-                    <li><code>Program Quality Director</code></li>
-                    <li><code>District Director</code></li>
-                    <li><code>Immediate Past District Director</code></li>
-                </ul>
-            </div>
-            <div class="clause">
-                <h3>Leadership Vote</h3>
-                <ul>
-                    <li>Each registered member in a qualifying leadership role gets exactly <strong>+1</strong> leadership vote.</li>
-                    <li>This vote is awarded <strong>regardless</strong> of whether the member also holds a club officer position (President or VP Education).</li>
-                    <li>A member receives at most <strong>1 leadership vote</strong> in total, even if they hold multiple leadership positions.</li>
-                </ul>
-            </div>
-        </section>
+            <section class="rule" id="leadership-votes-en">
+                <h2><span class="rule-number">2</span>Leadership Votes</h2>
+                <div class="clause">
+                    <h3>Eligible Leadership Roles</h3>
+                    <p>Registered paid members holding one of the following positions receive an additional <strong>leadership vote</strong>:</p>
+                    <ul>
+                        <li><code>Area Director</code></li>
+                        <li><code>Division Director</code></li>
+                        <li><code>Administration Manager</code></li>
+                        <li><code>Finance Manager</code></li>
+                        <li><code>Public Relations Manager</code></li>
+                        <li><code>Club Growth Director</code></li>
+                        <li><code>Program Quality Director</code></li>
+                        <li><code>District Director</code></li>
+                        <li><code>Immediate Past District Director</code></li>
+                    </ul>
+                </div>
+                <div class="clause">
+                    <h3>Leadership Vote</h3>
+                    <ul>
+                        <li>Each registered member in a qualifying leadership role gets exactly <strong>+1</strong> leadership vote.</li>
+                        <li>This vote is awarded <strong>regardless</strong> of whether the member also holds a club officer position (President or VP Education).</li>
+                        <li>A member receives at most <strong>1 leadership vote</strong> in total, even if they hold multiple leadership positions.</li>
+                    </ul>
+                </div>
+            </section>
 
-        <section class="rule page-break" id="vote-cap">
-            <h2><span class="rule-number">3</span>Vote Cap</h2>
-            <div class="clause">
-                <h3>Maximum Votes Per Member</h3>
-                <ul>
-                    <li>No member may carry more than <strong>2 club votes</strong> across all clubs they represent.</li>
-                    <li>No member may carry more than <strong>1 leadership vote</strong>.</li>
-                    <li>Maximum total votes per member: <strong>3</strong> (2 club + 1 leadership).</li>
-                </ul>
-            </div>
-        </section>
+            <section class="rule page-break" id="vote-cap-en">
+                <h2><span class="rule-number">3</span>Vote Cap</h2>
+                <div class="clause">
+                    <h3>Maximum Votes Per Member</h3>
+                    <ul>
+                        <li>No member may carry more than <strong>2 club votes</strong> across all clubs they represent.</li>
+                        <li>No member may carry more than <strong>1 leadership vote</strong>.</li>
+                        <li>Maximum total votes per member: <strong>3</strong> (2 club + 1 leadership).</li>
+                    </ul>
+                </div>
+            </section>
 
-        <section class="rule" id="redistribution">
-            <h2><span class="rule-number">3.2</span>Overflow Redistribution</h2>
-            <p class="intro">When a member would accumulate more than 2 club votes (for example, because they are the sole registered representative of multiple clubs), votes must be redistributed to maximise the number of clubs with representation.</p>
+            <section class="rule" id="redistribution-en">
+                <h2><span class="rule-number">3.2</span>Overflow Redistribution</h2>
+                <p class="intro">When a member would accumulate more than 2 club votes (for example, because they are the sole registered representative of multiple clubs), votes must be redistributed to maximise the number of clubs with representation.</p>
 
-            <div class="clause">
-                <h3>Redistribution Algorithm</h3>
-                <p><strong>Goal:</strong> Keep every member at or below 2 club votes while preserving as many clubs with vote representation as possible.</p>
-                <ol>
-                    <li><strong>Identify overflow members</strong>: those whose total club votes exceed 2.</li>
-                    <li><strong>Processing order</strong>: sort by club-vote total (descending), then by Member ID (ascending). Process one member at a time.</li>
-                    <li>
-                        <strong>For each overflow member, run two passes:</strong>
-                        <ul>
-                            <li><strong>Pass 1 — Hand off clubs with eligible alternates.</strong> For each of the member's clubs (lowest Club ID first), check whether the alternate registered paid officer for that club (VP Education if the member is President, or vice versa) has room to take on the votes without exceeding 2. If so, transfer the club's votes to that alternate — the club stays represented.</li>
-                            <li><strong>Pass 2 — Drop remaining clubs if still over cap.</strong> If Pass 1 alone isn't enough, drop the member's remaining clubs starting from the highest Club ID first. Each dropped club becomes unrepresented.</li>
-                        </ul>
-                    </li>
-                    <li><strong>Iterate</strong>: after each member is resolved, recalculate all totals. If an alternate is now over their own cap, they're processed next.</li>
-                </ol>
-            </div>
+                <div class="clause">
+                    <h3>Redistribution Algorithm</h3>
+                    <p><strong>Goal:</strong> Keep every member at or below 2 club votes while preserving as many clubs with vote representation as possible.</p>
+                    <ol>
+                        <li><strong>Identify overflow members</strong>: those whose total club votes exceed 2.</li>
+                        <li><strong>Processing order</strong>: sort by club-vote total (descending), then by Member ID (ascending). Process one member at a time.</li>
+                        <li>
+                            <strong>For each overflow member, run two passes:</strong>
+                            <ul>
+                                <li><strong>Pass 1 — Hand off clubs with eligible alternates.</strong> For each of the member's clubs (lowest Club ID first), check whether the alternate registered paid officer for that club (VP Education if the member is President, or vice versa) has room to take on the votes without exceeding 2. If so, transfer the club's votes to that alternate — the club stays represented.</li>
+                                <li><strong>Pass 2 — Drop remaining clubs if still over cap.</strong> If Pass 1 alone isn't enough, drop the member's remaining clubs starting from the highest Club ID first. Each dropped club becomes unrepresented.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Iterate</strong>: after each member is resolved, recalculate all totals. If an alternate is now over their own cap, they're processed next.</li>
+                    </ol>
+                </div>
 
-            <div class="callout example">
-                <h4>Example</h4>
-                <p>Alice (paid) is the sole registered President of Club A (10001) and Club B (10002). Club A also has Carol (paid VP Education) registered. Alice also holds Division Director.</p>
-                <table class="rule-table">
-                    <thead><tr><th>Item</th><th>Alice</th><th>Carol</th></tr></thead>
-                    <tbody>
-                        <tr><td>Club A (initial)</td><td>1 (split)</td><td>1 (split)</td></tr>
-                        <tr><td>Club B (initial)</td><td>2 (sole)</td><td>—</td></tr>
-                        <tr><td>Leadership</td><td>1</td><td>—</td></tr>
-                        <tr><td><strong>Club total</strong></td><td><strong>3 → overflow</strong></td><td><strong>1</strong></td></tr>
-                    </tbody>
-                </table>
-                <p><strong>Pass 1:</strong> for Club A, Carol is an eligible alternate (1 + 1 = 2 ≤ 2), so Alice's 1 club vote for Club A transfers to Carol.</p>
-                <table class="rule-table">
-                    <thead><tr><th>Item</th><th>Alice</th><th>Carol</th></tr></thead>
-                    <tbody>
-                        <tr><td>Club A</td><td>0</td><td><strong>2</strong></td></tr>
-                        <tr><td>Club B</td><td>2</td><td>—</td></tr>
-                        <tr><td>Leadership</td><td>1</td><td>—</td></tr>
-                        <tr><td><strong>Total</strong></td><td><strong>3 ✓</strong></td><td><strong>2 ✓</strong></td></tr>
-                    </tbody>
-                </table>
-                <p>Both clubs stay represented, and Alice ends within cap.</p>
-            </div>
-        </section>
+                <div class="callout example">
+                    <h4>Example</h4>
+                    <p>Alice (paid) is the sole registered President of Club A (10001) and Club B (10002). Club A also has Carol (paid VP Education) registered. Alice also holds Division Director.</p>
+                    <table class="rule-table">
+                        <thead><tr><th>Item</th><th>Alice</th><th>Carol</th></tr></thead>
+                        <tbody>
+                            <tr><td>Club A (initial)</td><td>1 (split)</td><td>1 (split)</td></tr>
+                            <tr><td>Club B (initial)</td><td>2 (sole)</td><td>—</td></tr>
+                            <tr><td>Leadership</td><td>1</td><td>—</td></tr>
+                            <tr><td><strong>Club total</strong></td><td><strong>3 → overflow</strong></td><td><strong>1</strong></td></tr>
+                        </tbody>
+                    </table>
+                    <p><strong>Pass 1:</strong> for Club A, Carol is an eligible alternate (1 + 1 = 2 ≤ 2), so Alice's 1 club vote for Club A transfers to Carol.</p>
+                    <table class="rule-table">
+                        <thead><tr><th>Item</th><th>Alice</th><th>Carol</th></tr></thead>
+                        <tbody>
+                            <tr><td>Club A</td><td>0</td><td><strong>2</strong></td></tr>
+                            <tr><td>Club B</td><td>2</td><td>—</td></tr>
+                            <tr><td>Leadership</td><td>1</td><td>—</td></tr>
+                            <tr><td><strong>Total</strong></td><td><strong>3 ✓</strong></td><td><strong>2 ✓</strong></td></tr>
+                        </tbody>
+                    </table>
+                    <p>Both clubs stay represented, and Alice ends within cap.</p>
+                </div>
+            </section>
 
-        <section class="rule page-break" id="deduplication">
-            <h2><span class="rule-number">4</span>Registration Deduplication</h2>
-            <div class="clause">
-                <h3>Duplicate Registration Entries</h3>
-                <p>If a member appears multiple times in the Registration List with the same Member Number:</p>
-                <ul>
-                    <li>Retain the <strong>last occurrence</strong> by row order.</li>
-                    <li>A duplicate Member Number is flagged as a warning.</li>
-                    <li>If the last occurrence has <code>Will you be attending? = No</code>, the member is treated as not attending (removed from eligible voters).</li>
-                    <li>This ensures the most recently submitted response always takes effect.</li>
-                </ul>
-            </div>
-        </section>
+            <section class="rule page-break" id="deduplication-en">
+                <h2><span class="rule-number">4</span>Registration Deduplication</h2>
+                <div class="clause">
+                    <h3>Duplicate Registration Entries</h3>
+                    <p>If a member appears multiple times in the Registration List with the same Member Number:</p>
+                    <ul>
+                        <li>Retain the <strong>last occurrence</strong> by row order.</li>
+                        <li>A duplicate Member Number is flagged as a warning.</li>
+                        <li>If the last occurrence has <code>Will you be attending? = No</code>, the member is treated as not attending (removed from eligible voters).</li>
+                        <li>This ensures the most recently submitted response always takes effect.</li>
+                    </ul>
+                </div>
+            </section>
 
-        <section class="rule" id="quorum">
-            <h2><span class="rule-number">5</span>Quorum</h2>
-            <div class="clause">
-                <h3>Governing Quorum Basis</h3>
-                <p>Governing text: "On the basis of two (2) votes per club, one-third of the Member Clubs in good standing in the District shall constitute a quorum for all District Council meetings."</p>
-                <p>In this system, <strong>Member Clubs in good standing</strong> are represented by clubs with <code>Club Status = Complete</code>.</p>
-            </div>
-            <div class="clause">
-                <h3>Quorum Threshold</h3>
-                <p>Quorum requirement = <strong>ceil(good-standing clubs &divide; 3)</strong>, where good-standing clubs is the unique count of clubs described above.</p>
-            </div>
-            <div class="clause">
-                <h3>Quorum Met Condition</h3>
-                <ul>
-                    <li>A club is considered represented when at least one registered paid eligible officer (Club President or VP Education) from that club receives assigned club vote(s).</li>
-                    <li>Quorum is met when represented clubs are greater than or equal to the threshold above.</li>
-                    <li>Quorum reporting is informational and does not alter per-member vote assignment logic.</li>
-                </ul>
-            </div>
-        </section>
-    </main>
+            <section class="rule" id="quorum-en">
+                <h2><span class="rule-number">5</span>Quorum</h2>
+                <div class="clause">
+                    <h3>Governing Quorum Basis</h3>
+                    <p>Governing text: "On the basis of two (2) votes per club, one-third of the Member Clubs in good standing in the District shall constitute a quorum for all District Council meetings."</p>
+                    <p>In this system, <strong>Member Clubs in good standing</strong> are represented by clubs with <code>Club Status = Complete</code>.</p>
+                </div>
+                <div class="clause">
+                    <h3>Quorum Threshold</h3>
+                    <p>Quorum requirement = <strong>ceil(good-standing clubs &divide; 3)</strong>, where good-standing clubs is the unique count of clubs described above.</p>
+                </div>
+                <div class="clause">
+                    <h3>Quorum Met Condition</h3>
+                    <ul>
+                        <li>A club is considered represented when at least one registered paid eligible officer (Club President or VP Education) from that club receives assigned club vote(s).</li>
+                        <li>Quorum is met when represented clubs are greater than or equal to the threshold above.</li>
+                        <li>Quorum reporting is informational and does not alter per-member vote assignment logic.</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
 
-    <footer>
+    <!-- ============================= SPANISH ============================= -->
+    <div class="lang-content" id="content-es" hidden>
+        <nav class="toc" aria-label="Tabla de contenido">
+            <h2>En esta página</h2>
+            <ol>
+                <li><a href="#overview-es">Resumen</a></li>
+                <li><a href="#eligibility-es">Elegibilidad</a></li>
+                <li><a href="#club-votes-es">Votos de Club</a></li>
+                <li><a href="#leadership-votes-es">Votos de Liderazgo</a></li>
+                <li><a href="#vote-cap-es">Límite de Votos</a></li>
+                <li><a href="#redistribution-es">Redistribución de Excedentes</a></li>
+                <li><a href="#deduplication-es">Depuración de Registros Duplicados</a></li>
+                <li><a href="#quorum-es">Quórum</a></li>
+            </ol>
+        </nav>
+
+        <main>
+            <section class="rule" id="overview-es">
+                <h2>Resumen</h2>
+                <p>Estas reglas establecen cómo se asigna el poder de voto a los socios registrados del Consejo, con base en la Lista de Miembros del Consejo y la Lista de Registro oficiales.</p>
+            </section>
+
+            <section class="rule" id="eligibility-es">
+                <h2><span class="rule-number">0</span>Elegibilidad</h2>
+                <div class="clause">
+                    <h3>Requisito de Socio Pagado</h3>
+                    <ul>
+                        <li>Solo los socios cuyo campo <code>Is Paid</code> en la Lista de Miembros del Consejo sea igual a <strong>Paid Member</strong> son elegibles para votar.</li>
+                        <li>Los socios que aparecen en la Lista de Registro pero no son socios pagados del Consejo quedan excluidos de todos los cálculos de votos y del resultado final.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="rule" id="club-votes-es">
+                <h2><span class="rule-number">1</span>Votos de Club</h2>
+                <div class="clause">
+                    <h3>Elegibilidad del Club</h3>
+                    <ul>
+                        <li>Solo los socios de clubes con <code>Club Status = Complete</code> son elegibles para recibir votos de club.</li>
+                        <li>Cada club aporta exactamente <strong>2 votos</strong> para distribuir entre sus representantes registrados.</li>
+                    </ul>
+                </div>
+                <div class="clause">
+                    <h3>Puestos de Oficiales del Club</h3>
+                    <p>Solo se consideran los siguientes puestos para la distribución de votos de club:</p>
+                    <ul>
+                        <li><code>Club President</code></li>
+                        <li><code>Club VP Education</code></li>
+                    </ul>
+                </div>
+                <div class="clause">
+                    <h3>Distribución de Votos del Club</h3>
+                    <table class="rule-table">
+                        <thead>
+                            <tr><th>Escenario</th><th>Presidente Registrado</th><th>VP de Educación Registrado</th><th>Resultado</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Ambos</td><td>✓</td><td>✓</td><td>El Presidente recibe 1 voto, la VPE recibe 1 voto</td></tr>
+                            <tr><td>Solo Presidente</td><td>✓</td><td>✗</td><td>El Presidente recibe 2 votos</td></tr>
+                            <tr><td>Solo VPE</td><td>✗</td><td>✓</td><td>La VPE recibe 2 votos</td></tr>
+                            <tr><td>Ninguno</td><td>✗</td><td>✗</td><td><strong>No se asignan votos de club</strong> (club sin representación)</td></tr>
+                        </tbody>
+                    </table>
+                    <p>Un socio se considera "registrado" si aparece en la Lista de Registro con <code>Will you be attending?</code> = YES (Sí).</p>
+                </div>
+            </section>
+
+            <section class="rule" id="leadership-votes-es">
+                <h2><span class="rule-number">2</span>Votos de Liderazgo</h2>
+                <div class="clause">
+                    <h3>Puestos de Liderazgo Elegibles</h3>
+                    <p>Los socios pagados y registrados que ocupen uno de los siguientes puestos reciben un <strong>voto de liderazgo</strong> adicional:</p>
+                    <ul>
+                        <li><code>Area Director</code></li>
+                        <li><code>Division Director</code></li>
+                        <li><code>Administration Manager</code></li>
+                        <li><code>Finance Manager</code></li>
+                        <li><code>Public Relations Manager</code></li>
+                        <li><code>Club Growth Director</code></li>
+                        <li><code>Program Quality Director</code></li>
+                        <li><code>District Director</code></li>
+                        <li><code>Immediate Past District Director</code></li>
+                    </ul>
+                </div>
+                <div class="clause">
+                    <h3>Voto de Liderazgo</h3>
+                    <ul>
+                        <li>Cada socio registrado en un puesto de liderazgo elegible recibe exactamente <strong>+1</strong> voto de liderazgo.</li>
+                        <li>Este voto se otorga <strong>sin importar</strong> si el socio también ocupa un puesto de oficial de club (Presidente o VP de Educación).</li>
+                        <li>Un socio recibe como máximo <strong>1 voto de liderazgo</strong> en total, incluso si ocupa varios puestos de liderazgo.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="rule page-break" id="vote-cap-es">
+                <h2><span class="rule-number">3</span>Límite de Votos</h2>
+                <div class="clause">
+                    <h3>Máximo de Votos por Socio</h3>
+                    <ul>
+                        <li>Ningún socio puede tener más de <strong>2 votos de club</strong> entre todos los clubes que representa.</li>
+                        <li>Ningún socio puede tener más de <strong>1 voto de liderazgo</strong>.</li>
+                        <li>Máximo total de votos por socio: <strong>3</strong> (2 de club + 1 de liderazgo).</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="rule" id="redistribution-es">
+                <h2><span class="rule-number">3.2</span>Redistribución de Excedentes</h2>
+                <p class="intro">Cuando un socio acumularía más de 2 votos de club (por ejemplo, por ser el único representante registrado de varios clubes), los votos deben redistribuirse para maximizar la cantidad de clubes con representación.</p>
+
+                <div class="clause">
+                    <h3>Algoritmo de Redistribución</h3>
+                    <p><strong>Meta:</strong> mantener a cada socio en 2 votos de club o menos, preservando la mayor cantidad posible de clubes con representación de voto.</p>
+                    <ol>
+                        <li><strong>Identificar socios con excedente</strong>: aquellos cuyo total de votos de club supera 2.</li>
+                        <li><strong>Orden de procesamiento</strong>: ordenar por total de votos de club (descendente), luego por ID de Socio (ascendente). Procesar un socio a la vez.</li>
+                        <li>
+                            <strong>Para cada socio con excedente, ejecutar dos pasadas:</strong>
+                            <ul>
+                                <li><strong>Pasada 1 — Transferir clubes con alternos elegibles.</strong> Para cada club del socio (empezando por el ID de Club más bajo), verificar si el oficial alterno registrado y pagado de ese club (VP de Educación si el socio es Presidente, o viceversa) tiene espacio para recibir los votos sin superar 2. Si es así, transferir los votos de ese club al alterno — el club permanece representado.</li>
+                                <li><strong>Pasada 2 — Eliminar los clubes restantes si aún se supera el límite.</strong> Si la Pasada 1 no es suficiente, eliminar los clubes restantes del socio comenzando por el ID de Club más alto. Cada club eliminado queda sin representación.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Iterar</strong>: después de resolver a cada socio, recalcular todos los totales. Si un alterno queda por encima de su propio límite, se procesa a continuación.</li>
+                    </ol>
+                </div>
+
+                <div class="callout example">
+                    <h4>Ejemplo</h4>
+                    <p>Alicia (pagada) es la única Presidenta registrada del Club A (10001) y el Club B (10002). El Club A también tiene a Carolina (VP de Educación pagada) registrada. Alicia también ocupa el puesto de Directora de División.</p>
+                    <table class="rule-table">
+                        <thead><tr><th>Concepto</th><th>Alicia</th><th>Carolina</th></tr></thead>
+                        <tbody>
+                            <tr><td>Club A (inicial)</td><td>1 (dividido)</td><td>1 (dividido)</td></tr>
+                            <tr><td>Club B (inicial)</td><td>2 (única)</td><td>—</td></tr>
+                            <tr><td>Liderazgo</td><td>1</td><td>—</td></tr>
+                            <tr><td><strong>Total de club</strong></td><td><strong>3 → excedente</strong></td><td><strong>1</strong></td></tr>
+                        </tbody>
+                    </table>
+                    <p><strong>Pasada 1:</strong> para el Club A, Carolina es una alterna elegible (1 + 1 = 2 ≤ 2), así que el voto de club de Alicia para el Club A se transfiere a Carolina.</p>
+                    <table class="rule-table">
+                        <thead><tr><th>Concepto</th><th>Alicia</th><th>Carolina</th></tr></thead>
+                        <tbody>
+                            <tr><td>Club A</td><td>0</td><td><strong>2</strong></td></tr>
+                            <tr><td>Club B</td><td>2</td><td>—</td></tr>
+                            <tr><td>Liderazgo</td><td>1</td><td>—</td></tr>
+                            <tr><td><strong>Total</strong></td><td><strong>3 ✓</strong></td><td><strong>2 ✓</strong></td></tr>
+                        </tbody>
+                    </table>
+                    <p>Ambos clubes permanecen representados y Alicia queda dentro del límite.</p>
+                </div>
+            </section>
+
+            <section class="rule page-break" id="deduplication-es">
+                <h2><span class="rule-number">4</span>Depuración de Registros Duplicados</h2>
+                <div class="clause">
+                    <h3>Entradas de Registro Duplicadas</h3>
+                    <p>Si un socio aparece varias veces en la Lista de Registro con el mismo Número de Socio:</p>
+                    <ul>
+                        <li>Se conserva la <strong>última entrada</strong> según el orden de las filas.</li>
+                        <li>Un Número de Socio duplicado se marca como advertencia.</li>
+                        <li>Si la última entrada tiene <code>Will you be attending? = No</code>, el socio se considera no asistente (se elimina de los votantes elegibles).</li>
+                        <li>Esto garantiza que la respuesta enviada más recientemente sea siempre la que tenga efecto.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="rule" id="quorum-es">
+                <h2><span class="rule-number">5</span>Quórum</h2>
+                <div class="clause">
+                    <h3>Base del Quórum según los Estatutos</h3>
+                    <p>Texto normativo: "Con base en dos (2) votos por club, un tercio de los Clubes Miembro en regla en el Distrito constituirá quórum para todas las reuniones del Consejo de Distrito."</p>
+                    <p>En este sistema, los <strong>Clubes Miembro en regla</strong> están representados por los clubes con <code>Club Status = Complete</code>.</p>
+                </div>
+                <div class="clause">
+                    <h3>Umbral de Quórum</h3>
+                    <p>El requisito de quórum = <strong>techo(clubes en regla &divide; 3)</strong>, donde "clubes en regla" es el conteo único de clubes descrito arriba.</p>
+                </div>
+                <div class="clause">
+                    <h3>Condición de Quórum Cumplido</h3>
+                    <ul>
+                        <li>Un club se considera representado cuando al menos un oficial elegible, registrado y pagado (Presidente del Club o VP de Educación) de ese club recibe voto(s) de club asignado(s).</li>
+                        <li>El quórum se cumple cuando la cantidad de clubes representados es mayor o igual al umbral anterior.</li>
+                        <li>El reporte de quórum es informativo y no altera la lógica de asignación de votos por socio.</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer id="pageFooter">
         Toastmasters Council Voting System &middot; District 0113 &middot; Version 1.2, effective September 21, 2026
     </footer>
 </div>
+<script>
+    var STORAGE_KEY = 'uiLanguage';
+    var TEXT = {
+        en: {
+            back: '← Back to Voting App',
+            title: 'Toastmasters Council Voting Rules',
+            meta: 'Version 1.2 · Effective September 21, 2026 · District 0113',
+            footer: 'Toastmasters Council Voting System · District 0113 · Version 1.2, effective September 21, 2026',
+            langLabel: 'Language'
+        },
+        es: {
+            back: '← Volver a la App de Votación',
+            title: 'Reglas de Votación del Consejo Toastmasters',
+            meta: 'Versión 1.2 · Vigente desde el 21 de septiembre de 2026 · Distrito 0113',
+            footer: 'Sistema de Votación del Consejo Toastmasters · Distrito 0113 · Versión 1.2, vigente desde el 21 de septiembre de 2026',
+            langLabel: 'Idioma'
+        }
+    };
+
+    function resolveLanguage() {
+        try {
+            var saved = localStorage.getItem(STORAGE_KEY);
+            if (saved === 'en' || saved === 'es') return saved;
+        } catch (err) { /* ignore */ }
+        return 'en';
+    }
+
+    function setLanguage(lang) {
+        if (lang !== 'en' && lang !== 'es') lang = 'en';
+        var text = TEXT[lang];
+
+        document.getElementById('content-en').hidden = lang !== 'en';
+        document.getElementById('content-es').hidden = lang !== 'es';
+        document.getElementById('backLink').textContent = text.back;
+        document.getElementById('pageTitle').textContent = text.title;
+        document.getElementById('pageMeta').textContent = text.meta;
+        document.getElementById('pageFooter').textContent = text.footer;
+        document.getElementById('langLabel').textContent = text.langLabel;
+        document.documentElement.lang = lang;
+
+        var select = document.getElementById('language-select');
+        if (select) select.value = lang;
+
+        try { localStorage.setItem(STORAGE_KEY, lang); } catch (err) { /* ignore */ }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var select = document.getElementById('language-select');
+        select.addEventListener('change', function () { setLanguage(select.value); });
+        setLanguage(resolveLanguage());
+    });
+</script>
 </body>
 </html>

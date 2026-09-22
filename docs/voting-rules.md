@@ -1,7 +1,7 @@
 # Toastmasters Council Voting Rules
 
 ## Version
-**1.1** - Effective March 11, 2026
+**1.2** - Effective September 21, 2026
 
 ## Overview
 These rules establish how voting power is assigned to registered Council members based on the official Council Member List and Registration List.
@@ -118,32 +118,32 @@ If a member appears multiple times in the Registration List with the same Member
 - If the last occurrence has `Will you be attending? = No`, the member is treated as not attending (removed from eligible voters).
 - This ensures the most recently submitted response always takes effect.
 
+## Quorum
+
+**Rule 5.1: Governing Quorum Basis**
+- Governing text: "On the basis of two (2) votes per club, one-third of the Member Clubs in good standing in the District shall constitute a quorum for all District Council meetings".
+- In this system, `Member Clubs in good standing` are represented by clubs with `Club Status = Complete`.
+
+**Rule 5.2: Quorum Threshold**
+- Quorum requirement = **ceil(good-standing clubs / 3)**.
+- `good-standing clubs` is the unique count of clubs defined in Rule 5.1.
+
+**Rule 5.3: Quorum Met Condition**
+- A club is considered represented when at least one registered paid eligible officer (Club President or Club VP Education) from that club receives assigned club vote(s).
+- Quorum is met when represented clubs are greater than or equal to the threshold from Rule 5.2.
+- Quorum reporting is informational and does not alter per-member vote assignment logic.
+
 ## Output Format
 
-**Rule 5.1: Output Columns (in order)**
+**Rule 6.1: Output Columns (in order)**
 1. `ID` (Member Number)
 2. `Label` (concatenation of `First Name` and `Last Name`)
 3. `Email`
 4. `Weight` (total computed votes, 0–3)
 
-**Rule 5.2: Output Eligibility**
+**Rule 6.2: Output Eligibility**
 - Only output members who appear in **both** the Council Member List and the Registration List with `Will you be attending? = YES`, and who receive at least **1 assigned vote** after all club/leadership calculations and redistribution.
 - Registered paid members who end with **0 votes** (for example, due to non-eligible roles or non-Complete club status for club voting) are **not reported** in output.
-
-## Quorum
-
-**Rule 6.1: Governing Quorum Basis**
-- Governing text: "On the basis of two (2) votes per club, one-third of the Member Clubs in good standing in the District shall constitute a quorum for all District Council meetings".
-- In this system, `Member Clubs in good standing` are represented by clubs with `Club Status = Complete`.
-
-**Rule 6.2: Quorum Threshold**
-- Quorum requirement = **ceil(good-standing clubs / 3)**.
-- `good-standing clubs` is the unique count of clubs defined in Rule 6.1.
-
-**Rule 6.3: Quorum Met Condition**
-- A club is considered represented when at least one registered paid eligible officer (Club President or Club VP Education) from that club receives assigned club vote(s).
-- Quorum is met when represented clubs are greater than or equal to the threshold from Rule 6.2.
-- Quorum reporting is informational and does not alter per-member vote assignment logic.
 
 ## Validation and Diagnostics
 
@@ -165,6 +165,6 @@ The application **must** report the following validation issues (non-blocking; d
 
 ---
 
-**Last Updated**: March 11, 2026  
-**Version**: 1.1  
+**Last Updated**: September 21, 2026  
+**Version**: 1.2  
 **Author**: Toastmasters Council Voting System

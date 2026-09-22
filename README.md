@@ -29,7 +29,8 @@ voting/
 ├── style.css                          # Responsive styling
 ├── app.js                             # Core vote engine & data processing
 ├── docs/
-│   └── voting-rules.md                # Canonical voting rules & algorithm
+│   ├── voting-rules.md                 # Canonical voting rules & algorithm
+│   └── voting-rules.html               # Reader-friendly rules page (linked from the app)
 ├── samples/
 │   ├── README.md                      # Test scenario documentation
 │   ├── sample-council.csv             # Example council member list

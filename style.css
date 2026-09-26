@@ -350,6 +350,22 @@ section h3 {
     font-weight: 700;
 }
 
+.club-representation-table tr.club-declined {
+    background: #fdf3e3;
+}
+
+.club-representation-table tr.club-declined .representation-status {
+    color: #8f5d00;
+    font-weight: 700;
+}
+
+.declined-note {
+    display: inline-block;
+    font-weight: 400;
+    font-size: 0.85em;
+    color: #8f5d00;
+}
+
 .results-section {
     background: var(--tm-fair-gray);
     border-radius: 8px;

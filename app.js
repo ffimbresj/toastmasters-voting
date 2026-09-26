@@ -62,6 +62,7 @@ const I18N = {
         tableRepresentationStatus: 'Status',
         representedYes: 'Represented',
         representedNo: 'Not Represented',
+        declinedLabel: 'Not Attending',
         roleAbbrevPresident: 'P',
         roleAbbrevVpe: 'VPE',
         leadershipTitle: 'District Leadership',
@@ -144,6 +145,7 @@ const I18N = {
         tableRepresentationStatus: 'Estado',
         representedYes: 'Representado',
         representedNo: 'Sin representación',
+        declinedLabel: 'No asistirá',
         roleAbbrevPresident: 'P',
         roleAbbrevVpe: 'VPE',
         leadershipTitle: 'Liderazgo del Distrito',
@@ -604,6 +606,7 @@ function normalizeRegistrationData(csvText, options = {}) {
     }
 
     const memberMap = new Map();
+    const declinedMap = new Map();
     const seenAny = new Set();
     const duplicateIds = [];
 
@@ -622,23 +625,28 @@ function normalizeRegistrationData(csvText, options = {}) {
 
         const attendingVal = cols.attending !== undefined ? normalizeText(row[cols.attending] || '') : 'yes';
         const isAttending = attendingVal.startsWith('si') || ['yes', 'y', 'true', 'attending'].includes(attendingVal);
+        const record = {
+            memberId,
+            name: cols.name !== undefined ? row[cols.name] || '' : '',
+            lastName: cols.lastName !== undefined ? row[cols.lastName] || '' : '',
+            email: cols.email !== undefined ? row[cols.email] || '' : ''
+        };
 
         if (isAttending) {
             // Overwrite — last occurrence retained
-            memberMap.set(memberId, {
-                memberId,
-                name: cols.name !== undefined ? row[cols.name] || '' : '',
-                lastName: cols.lastName !== undefined ? row[cols.lastName] || '' : '',
-                email: cols.email !== undefined ? row[cols.email] || '' : ''
-            });
+            memberMap.set(memberId, record);
+            declinedMap.delete(memberId);
         } else {
-            // Last entry says "not attending" — remove from eligible list
+            // Last entry says "not attending" — remove from eligible list, but keep a
+            // record that they explicitly declined (as opposed to never responding).
             memberMap.delete(memberId);
+            declinedMap.set(memberId, record);
         }
     }
 
     return {
         members: Array.from(memberMap.values()),
+        declined: Array.from(declinedMap.values()),
         duplicates: duplicateIds,
         headerRow,
         detectedColumns: detected.detected,
@@ -672,8 +680,9 @@ function normalizeMemberRecord(raw) {
 /**
  * Compute votes for all registered paid members based on council data and rules
  */
-function computeVotes(councilMembers, registeredMembers) {
+function computeVotes(councilMembers, registeredMembers, declinedMembers = []) {
     const validationIssues = [];
+    const declinedIds = new Set(declinedMembers.map(m => m.memberId));
 
     // Index ALL council members by ID (for name/info lookup and role detection)
     const councilById = {};
@@ -861,13 +870,25 @@ function computeVotes(councilMembers, registeredMembers) {
     // Club representation, organized by Division then Area, for good-standing clubs
     const clubRepresentation = Array.from(goodStandingClubIds).map(clubId => {
         const info = clubDirectory[clubId] || {};
+        const clubOfficers = clubs[clubId] || { president: [], vpe: [] };
+        // Officers who explicitly responded "not attending" — distinct from officers
+        // who never responded at all. Never affects votes or quorum, informational only.
+        const declinedOfficers = [
+            ...clubOfficers.president
+                .filter(m => declinedIds.has(m.memberId))
+                .map(m => ({ memberId: m.memberId, role: 'Club President', name: [m.firstName, m.lastName].filter(Boolean).join(' ').trim() })),
+            ...clubOfficers.vpe
+                .filter(m => declinedIds.has(m.memberId))
+                .map(m => ({ memberId: m.memberId, role: 'Club VP Education', name: [m.firstName, m.lastName].filter(Boolean).join(' ').trim() }))
+        ];
         return {
             clubId,
             clubName: info.clubName || clubId,
             division: info.division || '',
             area: info.area || '',
             represented: representedClubs.has(clubId),
-            representatives: clubRepresentatives[clubId] || []
+            representatives: clubRepresentatives[clubId] || [],
+            declinedOfficers
         };
     });
 
@@ -1322,16 +1343,35 @@ function renderClubRepresentation(report) {
                 .sort((a, b) => a.clubName.localeCompare(b.clubName))
                 .forEach(club => {
                     const tr = document.createElement('tr');
-                    tr.className = club.represented ? 'club-represented' : 'club-unrepresented';
+                    const declinedOfficers = club.declinedOfficers || [];
+                    const hasDeclines = declinedOfficers.length > 0;
+
+                    tr.className = club.represented
+                        ? 'club-represented'
+                        : (hasDeclines ? 'club-declined' : 'club-unrepresented');
 
                     const roleAbbrevs = [];
                     if (club.representatives.some(r => r.role === 'Club President')) roleAbbrevs.push(t('roleAbbrevPresident'));
                     if (club.representatives.some(r => r.role === 'Club VP Education')) roleAbbrevs.push(t('roleAbbrevVpe'));
 
-                    const statusLabel = club.represented
-                        ? `✅ ${roleAbbrevs.join(', ') || t('representedYes')}`
-                        : '❌';
-                    const statusTitle = club.represented ? '' : ` title="${escapeHtml(t('representedNo'))}"`;
+                    const declinedAbbrevs = [];
+                    if (declinedOfficers.some(o => o.role === 'Club President')) declinedAbbrevs.push(t('roleAbbrevPresident'));
+                    if (declinedOfficers.some(o => o.role === 'Club VP Education')) declinedAbbrevs.push(t('roleAbbrevVpe'));
+
+                    const declinedNote = hasDeclines
+                        ? ` <span class="declined-note">(${declinedAbbrevs.join(', ')}: ${t('declinedLabel')})</span>`
+                        : '';
+
+                    let statusLabel;
+                    let statusTitle = '';
+                    if (club.represented) {
+                        statusLabel = `✅ ${roleAbbrevs.join(', ') || t('representedYes')}${declinedNote}`;
+                    } else if (hasDeclines) {
+                        statusLabel = `🚫${declinedNote}`;
+                    } else {
+                        statusLabel = '❌';
+                        statusTitle = ` title="${escapeHtml(t('representedNo'))}"`;
+                    }
 
                     tr.innerHTML = `
                         <td>${escapeHtml(club.clubName)}</td>
@@ -1552,10 +1592,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 setCachedRegistrationMapping(headerSignature, selectedMapping);
             }
 
-            const { members: registeredMembers, duplicates: duplicateRegistrations } = registrationData;
+            const { members: registeredMembers, declined: declinedMembers, duplicates: duplicateRegistrations } = registrationData;
 
             // Compute votes
-            const { result, validationIssues, report } = computeVotes(councilMembers, registeredMembers);
+            const { result, validationIssues, report } = computeVotes(councilMembers, registeredMembers, declinedMembers);
 
             // Add duplicate registration warnings
             duplicateRegistrations.forEach(memberId => {

@@ -292,7 +292,7 @@ const REGISTRATION_FIELD_ALIASES = {
     name: ['name', 'first name', 'nombre', 'nombre(s)', 'nombres'],
     lastName: ['last name', 'apellido', 'apellidos', 'surname'],
     email: ['email', 'correo', 'correo electronico', 'correo electrónico'],
-    attending: ['will you be attending?', 'attending', 'asistiras', 'asistirás', 'asistencia', 'attend']
+    attending: ['will you be attending?', 'attending', 'asistiras', 'asistirás', 'asistencia', 'attend', 'asist', 'podras asistir', 'podrás asistir']
 };
 
 function normalizeText(value) {
@@ -588,6 +588,23 @@ function normalizeRegistrationData(csvText, options = {}) {
         });
         return total === 0 ? 0 : hits / total;
     };
+
+    // If the attendance column wasn't found by header text (e.g. an unanticipated
+    // question wording) and columns were auto-detected (not manually mapped by the
+    // user), fall back to scanning column values for a clear Yes/No attendance
+    // pattern. Silently defaulting everyone to "attending" is not a safe default.
+    if (cols.attending === undefined && !options.columnMapping) {
+        const claimedIdx = new Set([cols.memberId, cols.name, cols.lastName, cols.email].filter(v => v !== undefined));
+        let bestAttendingGuess = { idx: undefined, score: 0 };
+        for (let idx = 0; idx < headerRow.length; idx++) {
+            if (claimedIdx.has(idx)) continue;
+            const score = scoreColumn(idx, detectAttendanceLike);
+            if (score > bestAttendingGuess.score) bestAttendingGuess = { idx, score };
+        }
+        if (bestAttendingGuess.score >= 0.7) {
+            cols.attending = bestAttendingGuess.idx;
+        }
+    }
 
     const emailScoreAtEmail = scoreColumn(cols.email, detectEmailLike);
     const emailScoreAtAttending = scoreColumn(cols.attending, detectEmailLike);

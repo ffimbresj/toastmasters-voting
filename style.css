@@ -343,6 +343,13 @@ section h3 {
     border-bottom: 1px solid #dfe6e6;
 }
 
+/* Status stays on one line even when space is tight; the Club Name /
+   Position / Name columns wrap first to give it room. */
+.club-representation-table thead th:last-child,
+.club-representation-table td.representation-status {
+    white-space: nowrap;
+}
+
 @media (max-width: 640px) {
     .area-grid {
         grid-template-columns: 1fr;

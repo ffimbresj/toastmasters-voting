@@ -1250,10 +1250,10 @@ function displayResults(results, report) {
     results.forEach(member => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${escapeHtml(member.memberName)}</td>
-            <td>${escapeHtml(member.memberId)}</td>
-            <td><a href="mailto:${escapeHtml(member.email)}">${escapeHtml(member.email)}</a></td>
-            <td style="text-align: center; font-weight: bold; color: #004165;">${member.votes}</td>
+            <td data-label="${escapeHtml(t('tableMemberName'))}">${escapeHtml(member.memberName)}</td>
+            <td data-label="${escapeHtml(t('tableMemberNumber'))}">${escapeHtml(member.memberId)}</td>
+            <td data-label="${escapeHtml(t('tableVotes'))}" style="text-align: center; font-weight: bold; color: #004165;">${member.votes}</td>
+            <td data-label="${escapeHtml(t('tableEmail'))}"><a href="mailto:${escapeHtml(member.email)}">${escapeHtml(member.email)}</a></td>
         `;
         tbody.appendChild(tr);
     });
@@ -1472,7 +1472,7 @@ function renderLeadershipTable(report) {
     tableContainer.className = 'table-container';
 
     const table = document.createElement('table');
-    table.className = 'club-representation-table';
+    table.className = 'club-representation-table leadership-table';
     table.innerHTML = `
         <thead>
             <tr>
@@ -1504,11 +1504,11 @@ function renderLeadershipTable(report) {
         }
 
         tr.innerHTML = `
-            <td>${escapeHtml(pos.role)}</td>
-            <td>${escapeHtml(pos.name || pos.memberId)}</td>
-            <td>${escapeHtml(pos.division || dash)}</td>
-            <td>${escapeHtml(pos.area || dash)}</td>
-            <td class="representation-status"${statusTitle}>${statusLabel}</td>
+            <td data-label="${escapeHtml(t('tablePosition'))}">${escapeHtml(pos.role)}</td>
+            <td data-label="${escapeHtml(t('tableLeaderName'))}">${escapeHtml(pos.name || pos.memberId)}</td>
+            <td data-label="${escapeHtml(t('tableDivision'))}">${escapeHtml(pos.division || dash)}</td>
+            <td data-label="${escapeHtml(t('tableArea'))}">${escapeHtml(pos.area || dash)}</td>
+            <td class="representation-status" data-label="${escapeHtml(t('tableRepresentationStatus'))}"${statusTitle}>${statusLabel}</td>
         `;
         tbody.appendChild(tr);
     });

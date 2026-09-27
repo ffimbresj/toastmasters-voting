@@ -6,3 +6,11 @@
 *.swo
 *~
 .vscode/
+
+# Real member data (names, emails, phone numbers) — never publish these.
+# Use samples/*.csv for test fixtures instead.
+DistrictCouncilMembersList-*.csv
+Registro*.csv
+Reunión*.csv
+Reunion*.csv
+*.pdf

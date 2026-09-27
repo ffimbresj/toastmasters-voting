@@ -213,7 +213,11 @@ To modify voting rules:
 
 ## License
 
-Internal use for Toastmasters District 0113. Contact voting administrator for questions.
+Free to use by any Toastmasters District. Contact your District's voting administrator for questions.
+
+## Author
+
+Created by Fernando Fimbres Jurado, DTM
 
 ## Support
 

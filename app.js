@@ -56,6 +56,7 @@ const I18N = {
         clubRepresentationTitle: 'Club Representation',
         clubRepresentationSummary: '{represented} of {total} clubs have a registered voting representative',
         divisionHeading: 'Division {division}',
+        divisionRepresentedCount: '{represented} of {total} represented',
         divisionUnlabeled: 'Unassigned',
         areaHeading: 'Area {area}',
         tableClubName: 'Club Name',
@@ -92,7 +93,7 @@ const I18N = {
         rulesDescriptionPrefix: 'View the complete ',
         rulesDescriptionSuffix: ' for details on vote assignment logic, redistribution, and eligibility criteria.',
         rulesDescription: 'View the complete Voting Rules for details on vote assignment logic, redistribution, and eligibility criteria.',
-        footer: '© 2026 Toastmasters Council Voting System | Static Site Powered by GitHub Pages',
+        footer: '© 2026 Toastmasters Council Voting System | Created by Fernando Fimbres Jurado, DTM | Static Site Powered by GitHub Pages',
         severityError: 'ERROR',
         severityWarning: 'WARNING',
         severityInfo: 'INFO',
@@ -139,6 +140,7 @@ const I18N = {
         clubRepresentationTitle: 'Representación de clubes',
         clubRepresentationSummary: '{represented} de {total} clubes tienen un representante registrado con voto',
         divisionHeading: 'División {division}',
+        divisionRepresentedCount: '{represented} de {total} representados',
         divisionUnlabeled: 'Sin asignar',
         areaHeading: 'Área {area}',
         tableClubName: 'Nombre del club',
@@ -175,7 +177,7 @@ const I18N = {
         rulesDescriptionPrefix: 'Consulta las ',
         rulesDescriptionSuffix: ' completas para detalles de asignación, redistribución y elegibilidad.',
         rulesDescription: 'Consulta las Reglas de votación completas para detalles de asignación, redistribución y elegibilidad.',
-        footer: '© 2026 Sistema de votación del Consejo Toastmasters | Sitio estático en GitHub Pages',
+        footer: '© 2026 Sistema de votación del Consejo Toastmasters | Creado por Fernando Fimbres Jurado, DTM | Sitio estático en GitHub Pages',
         severityError: 'ERROR',
         severityWarning: 'ADVERTENCIA',
         severityInfo: 'INFO',
@@ -1320,12 +1322,28 @@ function renderClubRepresentation(report) {
     }
 
     Array.from(divisions.keys()).sort().forEach(divKey => {
+        const areasForCount = divisions.get(divKey);
+        const divisionClubs = Array.from(areasForCount.values()).flat();
+        const divisionRepresentedCount = divisionClubs.filter(c => c.represented).length;
+
         const divisionWrap = document.createElement('div');
         divisionWrap.className = 'division-group';
 
         const divisionHeading = document.createElement('h3');
         divisionHeading.className = 'division-heading';
-        divisionHeading.textContent = t('divisionHeading', { division: divKey });
+
+        const divisionTitle = document.createElement('span');
+        divisionTitle.textContent = t('divisionHeading', { division: divKey });
+
+        const divisionCount = document.createElement('span');
+        divisionCount.className = 'division-count';
+        divisionCount.textContent = t('divisionRepresentedCount', {
+            represented: divisionRepresentedCount,
+            total: divisionClubs.length
+        });
+
+        divisionHeading.appendChild(divisionTitle);
+        divisionHeading.appendChild(divisionCount);
         divisionWrap.appendChild(divisionHeading);
 
         const areaGrid = document.createElement('div');

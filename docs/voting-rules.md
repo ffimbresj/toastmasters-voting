@@ -167,4 +167,4 @@ The application **must** report the following validation issues (non-blocking; d
 
 **Last Updated**: September 21, 2026  
 **Version**: 1.2  
-**Author**: Toastmasters Council Voting System
+**Author**: Fernando Fimbres Jurado, DTM

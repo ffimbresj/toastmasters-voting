@@ -163,6 +163,10 @@ The application **must** report the following validation issues (non-blocking; d
 6. **Determinism**: Always sort output by Member ID (ascending) for consistent reproducibility.
 7. **Leadership roles**: The list in Rule 2.1 uses the exact `Position Description` values from the District Council CSV.
 
+## Official Reference
+
+These rules are aligned with Toastmasters International's official guidance. See the [District Council Meetings FAQ](https://www.toastmasters.org/footer/faq/District%20Council%20Meetings) on toastmasters.org for the source material on voter eligibility, club vote distribution, vote caps, and quorum. The District Executive Committee roles in Rule 2.1 match Article XI(a) of the District Administrative Bylaws.
+
 ---
 
 **Last Updated**: September 21, 2026  

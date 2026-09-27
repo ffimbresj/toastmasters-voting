@@ -1,5 +1,5 @@
 // ============================================================================
-// Toastmasters Council Voting Application
+// Toastmasters District Council Voting Application
 // Core: CSV parsing, vote engine, display, export
 // ============================================================================
 
@@ -39,14 +39,14 @@ const UI_LANGUAGE_STORAGE_KEY = 'uiLanguage';
 
 const I18N = {
     en: {
-        headerTitle: 'Toastmasters Council Voting',
-        headerSubtitle: 'Vote assignment based on Council Member and Registration lists',
+        headerTitle: 'Toastmasters District Council Voting',
+        headerSubtitle: 'Vote assignment based on District Council Member and Registration lists',
         languageLabel: 'Language',
         languageEnglish: 'English',
         languageSpanish: 'Spanish',
         stepUpload: 'Step 1: Upload Files',
         privacyNotice: '🔒 Privacy: This tool runs entirely in your browser. Your CSV files are never uploaded to any server, and the developer does not access, manage, or store any personal data.',
-        councilCsvLabel: 'Council Member List (CSV)',
+        councilCsvLabel: 'District Council Member List (CSV)',
         registrationCsvLabel: 'Registration List (CSV)',
         noFileSelected: 'No file selected',
         processVotes: 'Process Votes',
@@ -109,7 +109,7 @@ const I18N = {
         rulesDescriptionPrefix: 'View the complete ',
         rulesDescriptionSuffix: ' for details on vote assignment logic, redistribution, and eligibility criteria.',
         rulesDescription: 'View the complete Voting Rules for details on vote assignment logic, redistribution, and eligibility criteria.',
-        footer: '© 2026 Toastmasters Council Voting System | Created by Fernando Fimbres Jurado, DTM | Static Site Powered by GitHub Pages',
+        footer: '© 2026 Toastmasters District Council Voting System | Created by Fernando Fimbres Jurado, DTM | Static Site Powered by GitHub Pages',
         footerPrivacy: 'Your data stays in your browser — nothing is uploaded or stored anywhere.',
         severityError: 'ERROR',
         severityWarning: 'WARNING',
@@ -118,22 +118,22 @@ const I18N = {
         alertProcessError: 'Error processing files: {message}',
         errMissingFiles: 'Missing files',
         errRegistrationRowCount: 'Registration CSV must contain header and at least one data row.',
-        errCouncilHeader: 'Could not find header row in Council CSV. Expected columns: Member ID, Position Description, etc.',
+        errCouncilHeader: 'Could not find header row in District Council CSV. Expected columns: Member ID, Position Description, etc.',
         errCouncilColumns: 'Missing required columns: Member ID, Position Description',
         warnClubUnrepresented: 'Club unrepresented: {clubName} ({clubId}) has no registered paid President or VP Education',
         warnClubLostRepresentation: 'Club {clubName} ({clubId}) lost representation due to vote cap overflow',
-        errMissingCouncilMember: 'Registered member {memberId} not found in Council list',
+        errMissingCouncilMember: 'Registered member {memberId} not found in District Council list',
         warnDuplicateRegistration: 'Duplicate registration for member {memberId}; last entry retained'
     },
     es: {
-        headerTitle: 'Votación del Consejo Toastmasters',
-        headerSubtitle: 'Asignación de votos basada en listas del Consejo y de registro',
+        headerTitle: 'Votación del Consejo de Distrito Toastmasters',
+        headerSubtitle: 'Asignación de votos basada en listas del Consejo de Distrito y de registro',
         languageLabel: 'Idioma',
         languageEnglish: 'Inglés',
         languageSpanish: 'Español',
         stepUpload: 'Paso 1: Cargar archivos',
         privacyNotice: '🔒 Privacidad: Esta herramienta funciona completamente en tu navegador. Tus archivos CSV nunca se suben a ningún servidor, y el desarrollador no accede, administra ni almacena ningún dato personal.',
-        councilCsvLabel: 'Lista de miembros del Consejo (CSV)',
+        councilCsvLabel: 'Lista de miembros del Consejo de Distrito (CSV)',
         registrationCsvLabel: 'Lista de registro (CSV)',
         noFileSelected: 'Ningún archivo seleccionado',
         processVotes: 'Procesar votos',
@@ -196,7 +196,7 @@ const I18N = {
         rulesDescriptionPrefix: 'Consulta las ',
         rulesDescriptionSuffix: ' completas para detalles de asignación, redistribución y elegibilidad.',
         rulesDescription: 'Consulta las Reglas de votación completas para detalles de asignación, redistribución y elegibilidad.',
-        footer: '© 2026 Sistema de votación del Consejo Toastmasters | Creado por Fernando Fimbres Jurado, DTM | Sitio estático en GitHub Pages',
+        footer: '© 2026 Sistema de votación del Consejo de Distrito Toastmasters | Creado por Fernando Fimbres Jurado, DTM | Sitio estático en GitHub Pages',
         footerPrivacy: 'Tus datos permanecen en tu navegador — no se sube ni almacena nada en ningún lugar.',
         severityError: 'ERROR',
         severityWarning: 'ADVERTENCIA',
@@ -205,11 +205,11 @@ const I18N = {
         alertProcessError: 'Error al procesar archivos: {message}',
         errMissingFiles: 'Faltan archivos',
         errRegistrationRowCount: 'El CSV de registro debe tener encabezado y al menos una fila de datos.',
-        errCouncilHeader: 'No se encontró la fila de encabezado en el CSV del Consejo. Se esperaban columnas como Member ID y Position Description.',
+        errCouncilHeader: 'No se encontró la fila de encabezado en el CSV del Consejo de Distrito. Se esperaban columnas como Member ID y Position Description.',
         errCouncilColumns: 'Faltan columnas requeridas: Member ID, Position Description',
         warnClubUnrepresented: 'Club sin representación: {clubName} ({clubId}) no tiene Presidente o VP de Educación registrado y pagado',
         warnClubLostRepresentation: 'El club {clubName} ({clubId}) perdió representación por límite de votos',
-        errMissingCouncilMember: 'El socio registrado {memberId} no aparece en la lista del Consejo',
+        errMissingCouncilMember: 'El socio registrado {memberId} no aparece en la lista del Consejo de Distrito',
         warnDuplicateRegistration: 'Registro duplicado para el socio {memberId}; se conserva la última entrada'
     }
 };

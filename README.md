@@ -1,11 +1,11 @@
-# Toastmasters Council Voting Application
+# Toastmasters District Council Voting Application
 
-A lightweight, client-side web application for assigning voting power to Toastmasters Council members based on registration and council leadership roles. Built for GitHub Pages deployment.
+A lightweight, client-side web application for assigning voting power to Toastmasters District Council members based on registration and District Council leadership roles. Built for GitHub Pages deployment.
 
 ## Overview
 
 This application:
-1. **Accepts two CSV files**: Council Member List and Registration List
+1. **Accepts two CSV files**: District Council Member List and Registration List
 2. **Applies deterministic voting rules** encoded in `docs/voting-rules.md`
 3. **Computes vote assignments** based on club representation and leadership roles
 4. **Displays results** in an interactive HTML table
@@ -36,7 +36,7 @@ voting/
 │   ├── sample-council.csv             # Example council member list
 │   ├── sample-registration.csv        # Example registration list
 │   └── sample-expected-output.csv     # Expected voting results
-├── DistrictCouncilMembersList-*.csv   # Real council data (reference)
+├── DistrictCouncilMembersList-*.csv   # Real District Council data (reference)
 └── .gitignore
 ```
 
@@ -56,7 +56,7 @@ voting/
    ```
 
 3. Upload your CSVs:
-   - **Council Member List CSV**: The official Toastmasters council roster
+   - **District Council Member List CSV**: The official Toastmasters District Council roster
    - **Registration List CSV**: Member registrations with attendance flag
 
 4. Click "Process Votes" to compute vote assignments
@@ -76,7 +76,7 @@ If hosting on GitHub Pages:
 
 ## CSV File Requirements
 
-### Council Member List
+### District Council Member List
 **Expected columns** (exact header names required):
 - `Member ID` - Unique member identifier
 - `First Name` - Member first name
@@ -94,7 +94,7 @@ If hosting on GitHub Pages:
 
 ### Registration List
 **Expected columns** (exact header names required):
-- `Member Number` - Must match Council Member List "Member ID"
+- `Member Number` - Must match District Council Member List "Member ID"
 - `Name` - Member first name
 - `Last Name` - Member last name
 - `Email` - Contact email
@@ -173,7 +173,7 @@ See [samples/README.md](samples/README.md) for detailed test scenarios.
 
 ## Troubleshooting
 
-### "Could not find header row in Council CSV"
+### "Could not find header row in District Council CSV"
 - Check that your CSV contains the expected column names
 - Verify the column names match exactly (spacing and capitalization matter)
 - Remove any extra preface lines before the header row
@@ -184,12 +184,12 @@ See [samples/README.md](samples/README.md) for detailed test scenarios.
 - Re-export from source system if available
 
 ### "No results showing"
-- Verify members exist in **both** Council and Registration lists
+- Verify members exist in **both** District Council and Registration lists
 - Check that `Club Status = Complete` (member must be from valid club)
 - Confirm `Will you be attending? = Yes` in registration (case-insensitive)
 
 ### Members missing from output
-- Check if they're in both Council and Registration lists
+- Check if they're in both District Council and Registration lists
 - Verify their club status is "Complete"
 - Confirm they're marked as attending in registration
 

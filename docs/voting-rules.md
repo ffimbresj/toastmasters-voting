@@ -1,16 +1,16 @@
-# Toastmasters Council Voting Rules
+# Toastmasters District Council Voting Rules
 
 ## Version
 **1.2** - Effective September 21, 2026
 
 ## Overview
-These rules establish how voting power is assigned to registered Council members based on the official Council Member List and Registration List.
+These rules establish how voting power is assigned to registered District Council members based on the official District Council Member List and Registration List.
 
 ## Rule 0: Eligibility
 
 **Rule 0.1: Paid Member Requirement**
-- Only members whose `Is Paid` field in the Council Member List equals **`Paid Member`** are eligible to vote.
-- Members who appear in the Registration List but are not paid council members are excluded from all vote calculations and from the output.
+- Only members whose `Is Paid` field in the District Council Member List equals **`Paid Member`** are eligible to vote.
+- Members who appear in the Registration List but are not paid District Council members are excluded from all vote calculations and from the output.
 
 ## Base Rule: Club Votes
 
@@ -142,16 +142,16 @@ If a member appears multiple times in the Registration List with the same Member
 4. `Weight` (total computed votes, 0–3)
 
 **Rule 6.2: Output Eligibility**
-- Only output members who appear in **both** the Council Member List and the Registration List with `Will you be attending? = YES`, and who receive at least **1 assigned vote** after all club/leadership calculations and redistribution.
+- Only output members who appear in **both** the District Council Member List and the Registration List with `Will you be attending? = YES`, and who receive at least **1 assigned vote** after all club/leadership calculations and redistribution.
 - Registered paid members who end with **0 votes** (for example, due to non-eligible roles or non-Complete club status for club voting) are **not reported** in output.
 
 ## Validation and Diagnostics
 
 The application **must** report the following validation issues (non-blocking; display in UI):
-- **Missing registrations**: Council members from Complete clubs with no registration entry.
+- **Missing registrations**: District Council members from Complete clubs with no registration entry.
 - **Duplicate Member Numbers**: Multiple entries in Registration List for same Member Number (after dedup, note as warning).
 - **Unrepresented clubs**: Complete clubs with no registered Club President or VP Education.
-- **Invalid positions**: Council entries with Position Description not matching known roles (log as info).
+- **Invalid positions**: District Council entries with Position Description not matching known roles (log as info).
 
 ## Notes for Implementation
 
@@ -159,9 +159,9 @@ The application **must** report the following validation issues (non-blocking; d
 2. **Case sensitivity**: Perform case-insensitive matching on `Will you be attending?` values (accept "yes", "YES", "Yes", "true", "True", "TRUE", "attending", "Attending", etc. as affirmative).
 3. **Whitespace**: Trim all string fields during normalization.
 4. **CSV parsing**: Support quoted fields; handle embedded commas and newlines within quoted strings.
-5. **Council CSV preface**: Skip non-data lines (e.g., "Date Generated: ...") before the header row.
+5. **District Council CSV preface**: Skip non-data lines (e.g., "Date Generated: ...") before the header row.
 6. **Determinism**: Always sort output by Member ID (ascending) for consistent reproducibility.
-7. **Leadership roles**: The list in Rule 2.1 uses the exact `Position Description` values from the Council CSV.
+7. **Leadership roles**: The list in Rule 2.1 uses the exact `Position Description` values from the District Council CSV.
 
 ---
 

@@ -5,10 +5,10 @@ This directory contains sample input and expected output files for testing and v
 ## Files
 
 ### sample-council.csv
-A sample Council Member List containing:
+A sample District Council Member List containing:
 - **10 clubs** with both President and VP Education positions registered
 - **5 district leadership roles** (Area Director, Division Director, and the 3 Manager roles)
-- **25 council members** in total
+- **25 District Council members** in total
 
 ### sample-registration.csv
 A sample Registration List with:
@@ -39,7 +39,7 @@ Expected voting results after applying rules:
 ## How to Use
 
 1. Open `index.html` in a web browser
-2. Upload `sample-council.csv` as the Council Member List
+2. Upload `sample-council.csv` as the District Council Member List
 3. Upload `sample-registration.csv` as the Registration List
 4. Click "Process Votes"
 5. Verify the output matches `sample-expected-output.csv`

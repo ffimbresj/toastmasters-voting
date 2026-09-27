@@ -407,6 +407,15 @@ section h3 {
         text-align: left;
         flex-shrink: 0;
     }
+
+    /* Compact role acronym instead of the full title, to keep cards short. */
+    .role-full {
+        display: none;
+    }
+
+    .role-abbr {
+        display: inline;
+    }
 }
 
 .club-representation-table tr.club-represented .representation-status {
@@ -437,6 +446,11 @@ section h3 {
     font-weight: 400;
     font-size: 0.85em;
     color: #8f5d00;
+}
+
+/* Full role name on desktop; abbreviation swaps in on mobile (see media query). */
+.role-abbr {
+    display: none;
 }
 
 .results-section {

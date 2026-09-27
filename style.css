@@ -395,6 +395,11 @@ section h3 {
     gap: 10px;
 }
 
+.results-toolbar-bottom {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
 .table-container {
     overflow-x: auto;
     margin-bottom: 20px;

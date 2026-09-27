@@ -1574,6 +1574,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const registrationInput = document.getElementById('registration-file');
     const processBtn = document.getElementById('process-btn');
     const downloadBtn = document.getElementById('download-csv-btn');
+    const downloadBtnBottom = document.getElementById('download-csv-btn-bottom');
     const languageSelect = document.getElementById('language-select');
 
     currentLanguage = resolveLanguage();
@@ -1679,9 +1680,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Handle download button
-    downloadBtn.addEventListener('click', () => {
+    const handleDownloadClick = () => {
         if (appState.lastResults) {
             downloadAsCSV(appState.lastResults);
         }
-    });
+    };
+    downloadBtn.addEventListener('click', handleDownloadClick);
+    downloadBtnBottom.addEventListener('click', handleDownloadClick);
 });

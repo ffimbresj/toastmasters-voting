@@ -354,68 +354,6 @@ section h3 {
     .area-grid {
         grid-template-columns: 1fr;
     }
-
-    /* Voting Results and District Leadership: stack each row into a
-       label/value card instead of a cramped horizontally-scrolling table. */
-    .results-table thead,
-    .leadership-table thead {
-        display: none;
-    }
-
-    .results-table, .results-table tbody, .results-table tr, .results-table td,
-    .leadership-table, .leadership-table tbody, .leadership-table tr, .leadership-table td {
-        display: block;
-        width: 100%;
-    }
-
-    .results-table tr,
-    .leadership-table tr {
-        margin-bottom: 12px;
-        border: 1px solid var(--tm-border);
-        border-radius: 8px;
-        overflow: hidden;
-    }
-
-    .results-table tr:last-child,
-    .leadership-table tr:last-child {
-        margin-bottom: 0;
-    }
-
-    .results-table td,
-    .leadership-table td {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-        text-align: right;
-        border-bottom: 1px solid #eef2f2;
-        white-space: normal;
-        overflow-wrap: anywhere;
-        word-break: break-word;
-    }
-
-    .results-table td:last-child,
-    .leadership-table td:last-child {
-        border-bottom: none;
-    }
-
-    .results-table td::before,
-    .leadership-table td::before {
-        content: attr(data-label);
-        font-weight: 700;
-        color: var(--tm-loyal-blue);
-        text-align: left;
-        flex-shrink: 0;
-    }
-
-    /* Compact role acronym instead of the full title, to keep cards short. */
-    .role-full {
-        display: none;
-    }
-
-    .role-abbr {
-        display: inline;
-    }
 }
 
 .club-representation-table tr.club-represented .representation-status {
@@ -446,11 +384,6 @@ section h3 {
     font-weight: 400;
     font-size: 0.85em;
     color: #8f5d00;
-}
-
-/* Full role name on desktop; abbreviation swaps in on mobile (see media query). */
-.role-abbr {
-    display: none;
 }
 
 .results-section {

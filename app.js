@@ -82,23 +82,19 @@ const I18N = {
         roleAbbrevVpe: 'VPE',
         leadershipTitle: 'District Leadership',
         leadershipSummary: '{registered} of {total} leadership positions registered',
-        tablePosition: 'Position',
-        tablePositionShort: 'Role',
+        tablePosition: 'Role',
         tableLeaderName: 'Name',
-        tableDivision: 'Division',
-        tableDivisionShort: 'Div',
+        tableDivision: 'Div',
         tableArea: 'Area',
         leaderRegisteredYes: 'Registered',
         leaderRegisteredNo: 'Not Registered',
         resultsTitle: 'Voting Results',
         downloadCsv: '⬇ Download as CSV',
-        tableMemberName: 'Member Name',
-        tableMemberNameShort: 'Name',
+        tableMemberName: 'Name',
         tableMemberNumber: 'Member Number',
         tableMemberNumberShort: 'Member #',
         tableEmail: 'Email',
-        tableVotes: 'Votes Available',
-        tableVotesShort: 'Votes',
+        tableVotes: 'Votes',
         statsTotalMembers: 'Total Members:',
         statsTotalVotes: 'Total Votes Distributed:',
         statsRepresentedClubs: 'Represented Clubs:',
@@ -171,23 +167,19 @@ const I18N = {
         roleAbbrevVpe: 'VPE',
         leadershipTitle: 'Liderazgo del Distrito',
         leadershipSummary: '{registered} de {total} posiciones de liderazgo registradas',
-        tablePosition: 'Posición',
-        tablePositionShort: 'Rol',
+        tablePosition: 'Rol',
         tableLeaderName: 'Nombre',
-        tableDivision: 'División',
-        tableDivisionShort: 'Div',
+        tableDivision: 'Div',
         tableArea: 'Área',
         leaderRegisteredYes: 'Registrado',
         leaderRegisteredNo: 'No registrado',
         resultsTitle: 'Resultados de votación',
         downloadCsv: '⬇ Descargar CSV',
-        tableMemberName: 'Nombre del socio',
-        tableMemberNameShort: 'Nombre',
+        tableMemberName: 'Nombre',
         tableMemberNumber: 'Número de socio',
         tableMemberNumberShort: 'Socio #',
         tableEmail: 'Correo electrónico',
-        tableVotes: 'Votos disponibles',
-        tableVotesShort: 'Votos',
+        tableVotes: 'Votos',
         statsTotalMembers: 'Total de socios:',
         statsTotalVotes: 'Total de votos asignados:',
         statsRepresentedClubs: 'Clubes representados:',
@@ -1274,10 +1266,10 @@ function displayResults(results, report) {
     results.forEach(member => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td data-label="${escapeHtml(t('tableMemberNameShort'))}">${escapeHtml(member.memberName)}</td>
-            <td data-label="${escapeHtml(t('tableMemberNumberShort'))}">${escapeHtml(member.memberId)}</td>
-            <td data-label="${escapeHtml(t('tableVotesShort'))}" style="text-align: center; font-weight: bold; color: #004165;">${member.votes}</td>
-            <td data-label="${escapeHtml(t('tableEmail'))}"><a href="mailto:${escapeHtml(member.email)}">${escapeHtml(member.email)}</a></td>
+            <td>${escapeHtml(member.memberName)}</td>
+            <td>${escapeHtml(member.memberId)}</td>
+            <td style="text-align: center; font-weight: bold; color: #004165;">${member.votes}</td>
+            <td><a href="mailto:${escapeHtml(member.email)}">${escapeHtml(member.email)}</a></td>
         `;
         tbody.appendChild(tr);
     });
@@ -1530,13 +1522,11 @@ function renderLeadershipTable(report) {
         const roleAbbrev = LEADERSHIP_ROLE_ABBREVIATIONS[pos.role] || pos.role;
 
         tr.innerHTML = `
-            <td data-label="${escapeHtml(t('tablePositionShort'))}">
-                <span class="role-full">${escapeHtml(pos.role)}</span><span class="role-abbr" title="${escapeHtml(pos.role)}">${escapeHtml(roleAbbrev)}</span>
-            </td>
-            <td data-label="${escapeHtml(t('tableLeaderName'))}">${escapeHtml(pos.name || pos.memberId)}</td>
-            <td data-label="${escapeHtml(t('tableDivisionShort'))}">${escapeHtml(pos.division || dash)}</td>
-            <td data-label="${escapeHtml(t('tableArea'))}">${escapeHtml(pos.area || dash)}</td>
-            <td class="representation-status" data-label="${escapeHtml(t('tableRepresentationStatus'))}"${statusTitle}>${statusLabel}</td>
+            <td title="${escapeHtml(pos.role)}">${escapeHtml(roleAbbrev)}</td>
+            <td>${escapeHtml(pos.name || pos.memberId)}</td>
+            <td>${escapeHtml(pos.division || dash)}</td>
+            <td>${escapeHtml(pos.area || dash)}</td>
+            <td class="representation-status"${statusTitle}>${statusLabel}</td>
         `;
         tbody.appendChild(tr);
     });

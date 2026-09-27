@@ -919,7 +919,8 @@ function computeVotes(councilMembers, registeredMembers, declinedMembers = []) {
             name: [member.firstName, member.lastName].filter(Boolean).join(' ').trim(),
             division: member.division || '',
             area: member.area || '',
-            registered: registered.has(member.memberId)
+            registered: registered.has(member.memberId),
+            declined: declinedIds.has(member.memberId)
         }));
 
     const report = {
@@ -1469,10 +1470,20 @@ function renderLeadershipTable(report) {
     const tbody = document.createElement('tbody');
     sorted.forEach(pos => {
         const tr = document.createElement('tr');
-        tr.className = pos.registered ? 'club-represented' : 'club-unrepresented';
+        tr.className = pos.registered
+            ? 'club-represented'
+            : (pos.declined ? 'club-declined' : 'club-unrepresented');
 
-        const statusLabel = pos.registered ? `✅ ${t('leaderRegisteredYes')}` : '❌';
-        const statusTitle = pos.registered ? '' : ` title="${escapeHtml(t('leaderRegisteredNo'))}"`;
+        let statusLabel;
+        let statusTitle = '';
+        if (pos.registered) {
+            statusLabel = `✅ ${t('leaderRegisteredYes')}`;
+        } else if (pos.declined) {
+            statusLabel = `🚫 ${t('declinedLabel')}`;
+        } else {
+            statusLabel = '❌';
+            statusTitle = ` title="${escapeHtml(t('leaderRegisteredNo'))}"`;
+        }
 
         tr.innerHTML = `
             <td>${escapeHtml(pos.role)}</td>
